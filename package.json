@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "lint": "eslint index.js"
+    "lint": "eslint index.js src/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,7 @@
   "dependencies": {
     "aws-sdk": "^2.710.0",
     "csv-parse": "^4.10.1",
+    "dotenv": "^8.2.0",
     "moment": "^2.27.0",
     "moment-timezone": "^0.5.31"
   },
