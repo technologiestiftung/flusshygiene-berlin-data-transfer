@@ -17,7 +17,9 @@
     "url": "https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer/issues"
   },
   "homepage": "https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer#readme",
-  "dependencies": {},
+  "dependencies": {
+    "csv-parse": "^4.10.1"
+  },
   "devDependencies": {
     "eslint": "^7.4.0",
     "eslint-config-standard": "^14.1.1",
