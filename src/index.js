@@ -30,7 +30,7 @@ const csv = (csvString, delimiter) => new Promise((resolve, reject) => {
 
 const transform = (csvObj) => {
   csvObj.forEach((row) => {
-    row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin').unix()
+    row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).unix()
     row.Einzelwert = parseFloat(row.Einzelwert.replace(',', '.'))
     if (row.Einzelwert === -777) {
       row.Einzelwert = 'NA'
