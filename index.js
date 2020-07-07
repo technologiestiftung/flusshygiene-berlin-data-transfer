@@ -1,27 +1,6 @@
-const config = require('./config.json')
-const https = require('https')
-const parse = require("csv-parse")
+const { transform, csv } = require("./src/index")
 
-const gets = (url) => new Promise((resolve, reject) => {
-  https.get(url, (response) => {
-    let body = ''
-    response.on('data', (chunk) => {
-      body += chunk
-    })
-    response.on('end', () => resolve(body))
-  }).on('error', reject)
-})
-
-const csv = (csvString) => new Promise((resolve, reject) => {
-  parse(csvString, {
-    trim: true,
-    skip_empty_lines: true,
-    delimiter: ';'
-  }, (err, output) => {
-    if (err) {
-      reject(err)
-    } else {
-      resolve(output)
-    }
-  })
+csv('Datum;Einzelwert\n"08.07.2019 00:00";7,40\n"08.07.2019 00:15";7,80\n')
+.then((data) => {
+  console.log(transform(data))
 })
