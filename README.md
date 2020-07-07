@@ -1,4 +1,5 @@
 # flusshygiene-berlin-data-transfer
+[![Build Status](https://travis-ci.org/technologiestiftung/flusshygiene-berlin-data-transfer.svg?branch=master)](https://travis-ci.org/technologiestiftung/flusshygiene-berlin-data-transfer)
 Aggregate, clean and store data required for the modelling of bathing water in Berlin, through the respective flusshygiene plattform
 
 ## What this does
