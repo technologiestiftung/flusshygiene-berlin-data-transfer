@@ -39,12 +39,30 @@ const transform = (csvObj) => {
   return csvObj
 }
 
+const transformBwb = (csvObj) => {
+  csvObj.forEach((row) => {
+    row.date = moment(row.date, 'DD.MM.YYYY').format('YYYY-MM-DD')
+    row.value = parseFloat(row.vale.replace(',', '.'))
+  })
+  return csvObj
+}
+
 const extractAndClean = (csvString) => {
   // for some reason someone thought it would be super smart to put additonal meta data in the CSV header
   const meta = csvString.match(/;"Stationsnummer:[^\n]*/m)
   return {
     stationsnummer: meta[0].match(/[0-9]+/)[0],
     csvString: csvString.replace(/;"Stationsnummer:[^\n]*/m, '')
+  }
+}
+
+const extractAndCleanBwb = (csvString) => {
+  // don't even get me started on the formatting of this file 🤯
+  // remove the first line
+  const lines = csvString.split('\n')
+  lines.splice(0, 1)
+  return {
+    csvString: 'date\tvalue\n' + lines.join('\n')
   }
 }
 
@@ -92,4 +110,4 @@ const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => 
   })
 })
 
-module.exports = { csv, csv2buffer, extractAndClean, get, setupAWS, transform, uploadAWS }
+module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, setupAWS, transform, transformBwb, uploadAWS }
