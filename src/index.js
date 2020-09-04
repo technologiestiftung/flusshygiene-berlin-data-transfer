@@ -42,7 +42,7 @@ const transform = (csvObj) => {
 const transformBwb = (csvObj) => {
   csvObj.forEach((row) => {
     row.date = moment(row.date, 'DD.MM.YYYY').format('YYYY-MM-DD')
-    row.value = parseFloat(row.vale.replace(',', '.'))
+    row.value = parseFloat(row.value.replace(',', '.'))
   })
   return csvObj
 }
@@ -59,8 +59,9 @@ const extractAndClean = (csvString) => {
 const extractAndCleanBwb = (csvString) => {
   // don't even get me started on the formatting of this file 🤯
   // remove the first line
-  const lines = csvString.split('\n')
+  let lines = csvString.split('\n')
   lines.splice(0, 1)
+  lines = lines.map((line) => line.trim())
   return {
     csvString: 'date\tvalue\n' + lines.join('\n')
   }
