@@ -68,8 +68,15 @@ const extractAndCleanBwb = (csvString) => {
 }
 
 const setupAWS = () => {
-  if (!('AWS_ACCESS_KEY_ID' in process.env) || !('AWS_SECRET_ACCESS_KEY' in process.env)) {
-    throw Error('AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required as environmental variables')
+  if (process.env.NODE_ENV !== "test") {
+    if (
+      !("AWS_ACCESS_KEY_ID" in process.env) ||
+      !("AWS_SECRET_ACCESS_KEY" in process.env)
+    ) {
+      throw Error(
+        "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required as environmental variables"
+      );
+    }
   }
 
   return new AWS.S3({
@@ -84,17 +91,13 @@ const csv2buffer = (csvObj) => {
   csvObj.forEach((row) => {
     const values = []
     columns.forEach((column) => {
-      values.push(row[column])
-    })
-    csvString += '\n' + values.join(',')
-  })
-  return Buffer.from(csvString, 'utf8')
-}
-
-const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => {
-  if (!('S3_BUCKET' in process.env)) {
-    reject(Error('S3_BUCKET is required as an environmental variable'))
-  }
+const uploadAWS = (s3, fileContent, target) =>
+  new Promise((resolve, reject) => {
+    if (process.env.NODE_ENV !== "test") {
+      if (!("S3_BUCKET" in process.env)) {
+        reject(Error("S3_BUCKET is required as an environmental variable"));
+      }
+    }
 
   const params = {
     Bucket: process.env.S3_BUCKET,
