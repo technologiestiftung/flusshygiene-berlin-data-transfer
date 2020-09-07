@@ -1,71 +1,81 @@
-const https = require('https')
-const parse = require('csv-parse')
-const moment = require('moment-timezone')
-const AWS = require('aws-sdk')
+const https = require("https");
+const parse = require("csv-parse");
+const moment = require("moment-timezone");
+const AWS = require("aws-sdk");
 
-const get = (url) => new Promise((resolve, reject) => {
-  https.get(url, (response) => {
-    let body = ''
-    response.on('data', (chunk) => {
-      body += chunk
-    })
-    response.on('end', () => resolve(body))
-  }).on('error', reject)
-})
+const get = (url) =>
+  new Promise((resolve, reject) => {
+    https
+      .get(url, (response) => {
+        let body = "";
+        response.on("data", (chunk) => {
+          body += chunk;
+        });
+        response.on("end", () => resolve(body));
+      })
+      .on("error", reject);
+  });
 
-const csv = (csvString, delimiter) => new Promise((resolve, reject) => {
-  parse(csvString, {
-    trim: true,
-    skip_empty_lines: true,
-    delimiter: delimiter,
-    columns: true
-  }, (err, output) => {
-    if (err) {
-      reject(err)
-    } else {
-      resolve(output)
-    }
-  })
-})
+const csv = (csvString, delimiter) =>
+  new Promise((resolve, reject) => {
+    parse(
+      csvString,
+      {
+        trim: true,
+        skip_empty_lines: true,
+        delimiter: delimiter,
+        columns: true,
+      },
+      (err, output) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(output);
+        }
+      }
+    );
+  });
 
 const transform = (csvObj) => {
   csvObj.forEach((row) => {
-    row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).unix()
-    row.Einzelwert = parseFloat(row.Einzelwert.replace(',', '.'))
+    row.Datum = moment(row.Datum, "DD.MM.YYYY hh:mm")
+      .tz("Europe/Berlin", true)
+      .unix();
+    row.Einzelwert = parseFloat(row.Einzelwert.replace(",", "."));
     if (row.Einzelwert === -777) {
-      row.Einzelwert = 'NA'
+      row.Einzelwert = "NA";
     }
-  })
-  return csvObj
-}
+  });
+  return csvObj;
+};
 
 const transformBwb = (csvObj) => {
   csvObj.forEach((row) => {
-    row.date = moment(row.date, 'DD.MM.YYYY').format('YYYY-MM-DD')
-    row.value = parseFloat(row.value.replace(',', '.'))
-  })
-  return csvObj
-}
+    row.date = moment(row.date, "DD.MM.YYYY").format("YYYY-MM-DD");
+    row.value = parseFloat(row.value.replace(",", "."));
+  });
+  return csvObj;
+};
 
 const extractAndClean = (csvString) => {
   // for some reason someone thought it would be super smart to put additonal meta data in the CSV header
-  const meta = csvString.match(/;"Stationsnummer:[^\n]*/m)
+  const meta = csvString.match(/;"Stationsnummer:[^\n]*/m);
   return {
     stationsnummer: meta[0].match(/[0-9]+/)[0],
-    csvString: csvString.replace(/;"Stationsnummer:[^\n]*/m, '')
-  }
-}
+    csvString: csvString.replace(/;"Stationsnummer:[^\n]*/m, ""),
+  };
+};
 
 const extractAndCleanBwb = (csvString) => {
   // don't even get me started on the formatting of this file 🤯
   // remove the first line
-  let lines = csvString.split('\n')
-  lines.splice(0, 1)
-  lines = lines.map((line) => line.trim())
+  let lines = csvString.split("\n");
+  lines.splice(0, 1);
+  lines = lines.map((line) => line.trim());
   return {
-    csvString: 'date\tvalue\n' + lines.join('\n')
-  }
-}
+    csvString: "date\tvalue\n" + lines.join("\n"),
+  };
+};
 
 const setupAWS = () => {
   if (process.env.NODE_ENV !== "test") {
@@ -81,16 +91,23 @@ const setupAWS = () => {
 
   return new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  })
-}
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  });
+};
 
 const csv2buffer = (csvObj) => {
-  const columns = Object.keys(csvObj[0])
-  let csvString = columns.join(',')
+  const columns = Object.keys(csvObj[0]);
+  let csvString = columns.join(",");
   csvObj.forEach((row) => {
-    const values = []
+    const values = [];
     columns.forEach((column) => {
+      values.push(row[column]);
+    });
+    csvString += "\n" + values.join(",");
+  });
+  return Buffer.from(csvString, "utf8");
+};
+
 const uploadAWS = (s3, fileContent, target) =>
   new Promise((resolve, reject) => {
     if (process.env.NODE_ENV !== "test") {
@@ -99,19 +116,29 @@ const uploadAWS = (s3, fileContent, target) =>
       }
     }
 
-  const params = {
-    Bucket: process.env.S3_BUCKET,
-    Key: target,
-    Body: fileContent
-  }
+    const params = {
+      Bucket: process.env.S3_BUCKET,
+      Key: target,
+      Body: fileContent,
+    };
 
-  s3.upload(params, (err, data) => {
-    if (err) {
-      reject(err)
-    } else {
-      resolve(data)
-    }
-  })
-})
+    s3.upload(params, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
 
-module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, setupAWS, transform, transformBwb, uploadAWS }
+module.exports = {
+  csv,
+  csv2buffer,
+  extractAndClean,
+  extractAndCleanBwb,
+  get,
+  setupAWS,
+  transform,
+  transformBwb,
+  uploadAWS,
+};
