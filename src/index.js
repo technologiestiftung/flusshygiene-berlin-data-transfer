@@ -30,7 +30,12 @@ const csv = (csvString, delimiter) => new Promise((resolve, reject) => {
 
 const transform = (csvObj) => {
   csvObj.forEach((row) => {
-    row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).unix()
+    /*
+     * according to the original R-Script this was supplied as a unix timestamp
+     * row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).unix()
+     * now changed according to issue #6, https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer/issues/6
+     */
+    row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).format('YYYY-MM-DD hh:mm:ss')
     row.Einzelwert = parseFloat(row.Einzelwert.replace(',', '.'))
     if (row.Einzelwert === -777) {
       row.Einzelwert = 'NA'
@@ -41,7 +46,7 @@ const transform = (csvObj) => {
 
 const transformBwb = (csvObj) => {
   csvObj.forEach((row) => {
-    row.date = moment(row.date, 'DD.MM.YYYY').format('YYYY-MM-DD')
+    row.date = moment(row.date, 'DD.MM.YYYY').format('YYYY-MM-DD hh:mm:ss')
     row.value = parseFloat(row.value.replace(',', '.'))
   })
   return csvObj
@@ -91,6 +96,19 @@ const csv2buffer = (csvObj) => {
   return Buffer.from(csvString, 'utf8')
 }
 
+const csv2json2buffer = (csvObj) => {
+  const columns = Object.keys(csvObj[0])
+  let csvString = columns.join(',')
+  csvObj.forEach((row) => {
+    const values = []
+    columns.forEach((column) => {
+      values.push(row[column])
+    })
+    csvString += '\n' + values.join(',')
+  })
+  return Buffer.from(csvString, 'utf8')
+}
+
 const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => {
   if (!('S3_BUCKET' in process.env)) {
     reject(Error('S3_BUCKET is required as an environmental variable'))
@@ -111,4 +129,4 @@ const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => 
   })
 })
 
-module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, setupAWS, transform, transformBwb, uploadAWS }
+module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, csv2json2buffer, setupAWS, transform, transformBwb, uploadAWS }
