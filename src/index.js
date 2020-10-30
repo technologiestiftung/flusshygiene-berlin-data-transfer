@@ -71,7 +71,7 @@ const extractAndClean = (csvString) => {
 const extractAndCleanBwb = (csvString) => {
   // don't even get me started on the formatting of this file 🤯
   // remove the first line
-  let lines = csvString.trim().split('\n')
+  let lines = csvString.split('\n')
   lines.splice(0, 1)
   lines = lines.map((line) => line.trim())
   return {
