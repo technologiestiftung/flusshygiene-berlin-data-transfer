@@ -96,12 +96,12 @@ const csv2buffer = (csvObj) => {
   return Buffer.from(csvString, 'utf8')
 }
 
-const csv2json2buffer = (csvObj) => {
-  const json = { data: [] };
+const csv2json = (csvObj) => {
+  const json = { data: [] }
 
   const columns = Object.keys(csvObj[0])
   csvObj.forEach((row) => {
-    const data = {};
+    const data = {}
     columns.forEach((column) => {
       if (column === 'date' || column === 'Datum') {
         data.date = row[column]
@@ -109,10 +109,14 @@ const csv2json2buffer = (csvObj) => {
         data.value = row[column]
       }
     })
-    json.data.push(data);
+    json.data.push(data)
   })
 
-  return Buffer.from(JSON.stringify(json), 'utf8')
+  return json
+}
+
+const json2buffer = (jsonObj) => {
+  return Buffer.from(JSON.stringify(jsonObj), 'utf8') 
 }
 
 const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => {
@@ -135,4 +139,4 @@ const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => 
   })
 })
 
-module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, csv2json2buffer, setupAWS, transform, transformBwb, uploadAWS }
+module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, csv2json, json2buffer, setupAWS, transform, transformBwb, uploadAWS }

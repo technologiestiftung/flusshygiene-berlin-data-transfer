@@ -30,7 +30,7 @@ test('parse csv string', () => {
 
 test('transform csv values', () => {
   expect(transform([ { Datum: '08.07.2019 00:00', Einzelwert: '7,40' }, { Datum: '08.07.2019 00:15', Einzelwert: '7,80' }, { Datum: '08.07.2019 00:15', Einzelwert: '-777' } ]))
-    .toStrictEqual([ { Datum: 1562536800, Einzelwert: 7.4 }, { Datum: 1562537700, Einzelwert: 7.8 }, { Datum: 1562537700, Einzelwert: 'NA' } ])
+    .toStrictEqual([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 'NA' } ])
 })
 
 test('setup aws client', () => {
@@ -90,5 +90,5 @@ test('BWB: parse csv string', () => {
 
 test('BWB: transform csv values', () => {
   expect(transformBwb([ { date: '25.08.2020', value: '935,012621' }, { date: '26.08.2020', value: '83507,58802' }, { date: '27.08.2020', value: '9320,413933' } ]))
-    .toStrictEqual([ { date: '2020-08-25', value: 935.012621 }, { date: '2020-08-26', value: 83507.58802 }, { date: '2020-08-27', value: 9320.413933 } ])
+    .toStrictEqual([ { date: '2020-08-25 12:00:00', value: 935.012621 }, { date: '2020-08-26 12:00:00', value: 83507.58802 }, { date: '2020-08-27 12:00:00', value: 9320.413933 } ])
 })
