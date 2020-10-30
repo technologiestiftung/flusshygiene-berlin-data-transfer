@@ -97,16 +97,22 @@ const csv2buffer = (csvObj) => {
 }
 
 const csv2json2buffer = (csvObj) => {
+  const json = { data: [] };
+
   const columns = Object.keys(csvObj[0])
-  let csvString = columns.join(',')
   csvObj.forEach((row) => {
-    const values = []
+    const data = {};
     columns.forEach((column) => {
-      values.push(row[column])
+      if (column === 'date' || column === 'Datum') {
+        data.date = row[column]
+      } else {
+        data.value = row[column]
+      }
     })
-    csvString += '\n' + values.join(',')
+    json.data.push(data);
   })
-  return Buffer.from(csvString, 'utf8')
+
+  return Buffer.from(JSON.stringify(json), 'utf8')
 }
 
 const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => {
