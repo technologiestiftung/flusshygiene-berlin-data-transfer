@@ -43,8 +43,8 @@ test('setup aws client', () => {
     .toBe('object')
 })
 
-test('upload to AWS', () => {
-  return uploadAWS(setupAWS(), csv2buffer([ { Datum: 1562536800, Einzelwert: 7.4 }, { Datum: 1562537700, Einzelwert: 7.8 } ]), "test/test.csv")
+test('upload to AWS (csv)', () => {
+  return uploadAWS(setupAWS(), csv2buffer([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 } ]), "test/test.csv")
     .then((data) => {
       return get(data.Location)
     })
@@ -52,14 +52,30 @@ test('upload to AWS', () => {
       return csv(data, ',')
     })
     .then((data) => {
-      expect(data).toStrictEqual([ { Datum: "1562536800", Einzelwert: "7.4" }, { Datum: "1562537700", Einzelwert: "7.8" } ])
+      expect(data).toStrictEqual([ { Datum: '2019-07-08 12:00:00', Einzelwert: "7.4" }, { Datum: '2019-07-08 12:15:00', Einzelwert: "7.8" } ])
     })
     .catch((err) => {
       throw err;
     })
 })
 
-// Testing the pipeline for downloading, transforming and uploading data from the Berlin Water Service (uploading to AWS is not tested)
+test('upload to AWS (json)', () => {
+  return uploadAWS(setupAWS(), json2buffer(csv2json([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 } ])), "test/test.json")
+    .then((data) => {
+      return get(data.Location)
+    })
+    .then((data) => {
+      return JSON.parse(data)
+    })
+    .then((data) => {
+      expect(data).toStrictEqual({ data: [ { date: '2019-07-08 12:00:00', value: 7.4 }, { date: '2019-07-08 12:15:00', value: 7.8 } ]})
+    })
+    .catch((err) => {
+      throw err;
+    })
+})
+
+// Testing the pipeline for downloading, transforming and uploading data from the Berlin Water Service (uploading to AWS is not tested, as there is no difference to the above)
 
 test('BWB: get csv file', () => {
   return get('https://raw.githubusercontent.com/technologiestiftung/flusshygiene-berlin-data-transfer/master/test/bwb.txt').then((data) => {
