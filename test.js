@@ -2,7 +2,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const { csv, csv2buffer, extractAndClean, extractAndCleanBwb, transformBwb, get, setupAWS, transform, uploadAWS } = require("./src/index");
+const { csv, csv2buffer, extractAndClean, extractAndCleanBwb, transformBwb, get, setupAWS, transform, uploadAWS, json2buffer, csv2json } = require("./src/index");
 
 // Testing the pipeline for downloading, transforming and uploading data from the Berlin Senate
 
@@ -31,6 +31,11 @@ test('parse csv string', () => {
 test('transform csv values', () => {
   expect(transform([ { Datum: '08.07.2019 00:00', Einzelwert: '7,40' }, { Datum: '08.07.2019 00:15', Einzelwert: '7,80' }, { Datum: '08.07.2019 00:15', Einzelwert: '-777' } ]))
     .toStrictEqual([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 'NA' } ])
+})
+
+test('transform csv to json', () => {
+  expect(csv2json([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 'NA' } ]))
+    .toStrictEqual({ data: [ { date: '2019-07-08 12:00:00', value: 7.4 }, { date: '2019-07-08 12:15:00', value: 7.8 }, { date: '2019-07-08 12:15:00', value: 'NA' } ]})
 })
 
 test('setup aws client', () => {
@@ -91,4 +96,9 @@ test('BWB: parse csv string', () => {
 test('BWB: transform csv values', () => {
   expect(transformBwb([ { date: '25.08.2020', value: '935,012621' }, { date: '26.08.2020', value: '83507,58802' }, { date: '27.08.2020', value: '9320,413933' } ]))
     .toStrictEqual([ { date: '2020-08-25 12:00:00', value: 935.012621 }, { date: '2020-08-26 12:00:00', value: 83507.58802 }, { date: '2020-08-27 12:00:00', value: 9320.413933 } ])
+})
+
+test('BWB: transform csv to json', () => {
+  expect(csv2json([ { date: '2020-08-25 12:00:00', value: 935.012621 }, { date: '2020-08-26 12:00:00', value: 83507.58802 }, { date: '2020-08-27 12:00:00', value: 9320.413933 } ]))
+    .toStrictEqual({ data: [ { date: '2020-08-25 12:00:00', value: 935.012621 }, { date: '2020-08-26 12:00:00', value: 83507.58802 }, { date: '2020-08-27 12:00:00', value: 9320.413933 } ]})
 })
