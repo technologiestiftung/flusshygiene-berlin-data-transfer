@@ -28,6 +28,8 @@ Promise.all(config.stations.map((station) => {
         uploadAWS(s3, jsonBuff, `stations/${station}/${moment().format('YYYY-MM-DD_hh-mm-ss')}.json`),
         uploadAWS(s3, jsonBuff, `stations/${station}/latest.json`)
       ])
+
+      return Promise.resolve()
     })
 }))
   .then(() => {
@@ -35,12 +37,20 @@ Promise.all(config.stations.map((station) => {
       .then((data) => {
         return csv(extractAndCleanBwb(data), '\t')
       })
-      .then((data) => {
+      .then(async (data) => {
         const buff = csv2buffer(transformBwb(data))
-        return Promise.all([
+        await Promise.all([
           uploadAWS(s3, buff, `wastewater/${moment().format('YYYY-MM-DD_hh-mm-ss')}.csv`),
           uploadAWS(s3, buff, 'wastewater/latest.csv')
         ])
+
+        const jsonBuff = json2buffer(csv2json(transformBwb(data)))
+        await Promise.all([
+          uploadAWS(s3, buff, `wastewater/${moment().format('YYYY-MM-DD_hh-mm-ss')}.json`),
+          uploadAWS(s3, buff, 'wastewater/latest.json')
+        ])
+
+        return Promise.resolve()
       })
   })
   .catch((err) => {

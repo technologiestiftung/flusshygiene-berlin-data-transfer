@@ -1,10 +1,15 @@
 const https = require('https')
+const http = require('http')
 const parse = require('csv-parse')
 const moment = require('moment-timezone')
 const AWS = require('aws-sdk')
 
 const get = (url) => new Promise((resolve, reject) => {
-  https.get(url, (response) => {
+  let protocol = https;
+  if (url.substring(0, 5).toLowerCase() !== 'https') {
+    protocol = http;
+  }
+  protocol.get(url, (response) => {
     let body = ''
     response.on('data', (chunk) => {
       body += chunk
