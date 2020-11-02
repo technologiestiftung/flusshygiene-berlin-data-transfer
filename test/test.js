@@ -18,11 +18,6 @@ const {
   csv2json,
 } = require("../src/index");
 
-// const mS3Instance = {
-//   upload: jest.fn().mockReturnThis(),
-//   promise: jest.fn(),
-// };
-
 jest.mock("aws-sdk", () => {
   return {
     S3: jest.fn(() => {
@@ -39,6 +34,8 @@ jest.mock("aws-sdk", () => {
 
 afterEach(() => {
   jest.clearAllMocks();
+});
+afterAll(() => {
   jest.resetAllMocks();
 });
 
@@ -114,7 +111,7 @@ test("setup aws client", () => {
   expect(typeof setupAWS()).toBe("object");
 });
 
-test.only("upload to AWS (csv)", async () => {
+test("upload to AWS (csv)", async () => {
   const s3 = setupAWS();
   const data = [
     { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
@@ -130,34 +127,20 @@ test.only("upload to AWS (csv)", async () => {
   });
 });
 
-test("upload to AWS (json)", () => {
-  return uploadAWS(
-    setupAWS(),
-    json2buffer(
-      csv2json([
-        { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-        { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-      ])
-    ),
-    "test/test.json"
-  )
-    .then((data) => {
-      return get(data.Location);
-    })
-    .then((data) => {
-      return JSON.parse(data);
-    })
-    .then((data) => {
-      expect(data).toStrictEqual({
-        data: [
-          { date: "2019-07-08 12:00:00", value: 7.4 },
-          { date: "2019-07-08 12:15:00", value: 7.8 },
-        ],
-      });
-    })
-    .catch((err) => {
-      throw err;
-    });
+test("upload to AWS (json)", async () => {
+  const s3 = setupAWS();
+  const data = [
+    { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
+    { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
+  ];
+  const buffer = json2buffer(csv2json(data));
+  await uploadAWS(s3, buffer, "test/test.json");
+  expect(s3.upload).toHaveBeenCalledTimes(1);
+  expect(s3.upload).toHaveBeenCalledWith({
+    Bucket: "",
+    Body: buffer,
+    Key: "test/test.json",
+  });
 });
 
 // Testing the pipeline for downloading, transforming and uploading data from the Berlin Water Service (uploading to AWS is not tested, as there is no difference to the above)
