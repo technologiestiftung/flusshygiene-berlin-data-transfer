@@ -19,6 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Use Node.js from nvm
+        shell: bash -l {0}
         run: nvm install
       - name: install deps
         run: npm ci
