@@ -21,11 +21,11 @@ test("get csv file", async () => {
     "https://raw.githubusercontent.com/technologiestiftung/flusshygiene-berlin-data-transfer/master/test/test.csv"
   );
   expect(data).toMatchInlineSnapshot(`
-      "Datum;Einzelwert;\\"Stationsnummer: 5803200\\";\\"Stationsname: Tiefwerder\\";\\"Gew�sser: Havel\\";\\"Durchfluss im m�/s\\";\\"Fehlwerte: -777\\"
-      \\"08.07.2019 00:00\\";7,40
-      \\"08.07.2019 00:15\\";7,80
-      "
-    `);
+    "Datum;Einzelwert;\\"Stationsnummer: 5803200\\";\\"Stationsname: Tiefwerder\\";\\"Gew�sser: Havel\\";\\"Durchfluss im m�/s\\";\\"Fehlwerte: -777\\"
+    \\"08.07.2019 00:00\\";7,40
+    \\"08.07.2019 00:15\\";7,80
+    "
+  `);
 });
 
 test("clean csv string", () => {
@@ -70,7 +70,7 @@ test("setup aws client", () => {
   expect(typeof setupAWS()).toBe("object");
 });
 
-test("upload to AWS", async () => {
+test.only("upload to AWS", async () => {
   const data = await uploadAWS(
     setupAWS(),
     csv2buffer([
@@ -93,13 +93,7 @@ test("BWB: get csv file", async () => {
   const data = await get(
     "https://raw.githubusercontent.com/technologiestiftung/flusshygiene-berlin-data-transfer/master/test/bwb.txt"
   );
-  expect(data).toMatchInlineSnapshot(`
-      "	Altarm Ruhleben m3/d
-      25.08.2020	935,012621
-      26.08.2020	83507,58802
-      27.08.2020	9320,413933
-      "
-    `);
+  expect(data).toMatchSnapshot();
 });
 
 test("BWB: clean csv string", () => {
