@@ -1,6 +1,8 @@
-if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config();
-}
+// if (process.env.NODE_ENV !== "production") {
+//   require("dotenv").config();
+// }
+// eslint-disable-next-line no-unused-vars
+// @ts-check
 
 const {
   csv,
@@ -14,7 +16,31 @@ const {
   uploadAWS,
   json2buffer,
   csv2json,
-} = require("./src/index");
+} = require("../src/index");
+
+// const mS3Instance = {
+//   upload: jest.fn().mockReturnThis(),
+//   promise: jest.fn(),
+// };
+
+jest.mock("aws-sdk", () => {
+  return {
+    S3: jest.fn(() => {
+      return {
+        upload: jest.fn().mockReturnThis(),
+        promise: jest.fn().mockResolvedValue({
+          ETag: "mock-etag",
+          Location: "mock-location",
+        }),
+      };
+    }),
+  };
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
+  jest.resetAllMocks();
+});
 
 // Testing the pipeline for downloading, transforming and uploading data from the Berlin Senate
 
@@ -88,30 +114,20 @@ test("setup aws client", () => {
   expect(typeof setupAWS()).toBe("object");
 });
 
-test("upload to AWS (csv)", () => {
-  return uploadAWS(
-    setupAWS(),
-    csv2buffer([
-      { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-      { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-    ]),
-    "test/test.csv"
-  )
-    .then((data) => {
-      return get(data.Location);
-    })
-    .then((data) => {
-      return csv(data, ",");
-    })
-    .then((data) => {
-      expect(data).toStrictEqual([
-        { Datum: "2019-07-08 12:00:00", Einzelwert: "7.4" },
-        { Datum: "2019-07-08 12:15:00", Einzelwert: "7.8" },
-      ]);
-    })
-    .catch((err) => {
-      throw err;
-    });
+test.only("upload to AWS (csv)", async () => {
+  const s3 = setupAWS();
+  const data = [
+    { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
+    { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
+  ];
+  const buffer = csv2buffer(data);
+  await uploadAWS(s3, buffer, "test/test.csv");
+  expect(s3.upload).toHaveBeenCalledTimes(1);
+  expect(s3.upload).toHaveBeenCalledWith({
+    Bucket: "",
+    Body: buffer,
+    Key: "test/test.csv",
+  });
 });
 
 test("upload to AWS (json)", () => {

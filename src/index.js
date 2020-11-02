@@ -1,3 +1,4 @@
+// @ts-check
 const https = require("https");
 const http = require("http");
 const parse = require("csv-parse");
@@ -8,6 +9,7 @@ const get = (url) =>
   new Promise((resolve, reject) => {
     let protocol = https;
     if (url.substring(0, 5).toLowerCase() !== "https") {
+      // @ts-ignore
       protocol = http;
     }
     protocol
@@ -143,10 +145,10 @@ const json2buffer = (jsonObj) => {
   return Buffer.from(JSON.stringify(jsonObj), "utf8");
 };
 
-const uploadAWS = (s3, fileContent, target) =>
-  new Promise((resolve, reject) => {
+const uploadAWS = async (s3, fileContent, target) => {
+  try {
     if (!("S3_BUCKET" in process.env)) {
-      reject(Error("S3_BUCKET is required as an environmental variable"));
+      throw new Error("S3_BUCKET is required as an environmental variable");
     }
 
     const params = {
@@ -154,15 +156,13 @@ const uploadAWS = (s3, fileContent, target) =>
       Key: target,
       Body: fileContent,
     };
-
-    s3.upload(params, (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
+    const data = await s3.upload(params).promise();
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 module.exports = {
   csv,
