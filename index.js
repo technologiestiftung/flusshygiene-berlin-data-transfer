@@ -8,7 +8,7 @@ if (!('TSB_SECRET' in process.env)) {
 
 const config = require('./config.json')
 const moment = require('moment')
-const { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, setupAWS, transform, transformBwb, uploadAWS } = require('./src/index')
+const { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, setupAWS, transform, transformBwb, uploadAWS, csv2json, json2buffer } = require('./src/index')
 
 const s3 = setupAWS()
 
@@ -17,25 +17,43 @@ Promise.all(config.stations.map((station) => {
     .then((data) => {
       return csv(extractAndClean(data).csvString, ';')
     })
-    .then((data) => {
-      const buff = csv2buffer(transform(data))
-      return Promise.all([
-        uploadAWS(s3, buff, `stations/${station}/${moment().format('YYYY-MM-DD_hh-mm-ss')}.csv`),
-        uploadAWS(s3, buff, `stations/${station}/latest.csv`)
+    .then(async (data) => {
+      const csvBuff = csv2buffer(transform(data))
+      await Promise.all([
+        uploadAWS(s3, csvBuff, `stations/${station}/${moment().format('YYYY-MM-DD_hh-mm-ss')}.csv`),
+        uploadAWS(s3, csvBuff, `stations/${station}/latest.csv`)
       ])
+
+      const jsonBuff = json2buffer(csv2json(data))
+      await Promise.all([
+        uploadAWS(s3, jsonBuff, `stations/${station}/${moment().format('YYYY-MM-DD_hh-mm-ss')}.json`),
+        uploadAWS(s3, jsonBuff, `stations/${station}/latest.json`)
+      ])
+
+      return Promise.resolve()
     })
 }))
   .then(() => {
     return get(`http://${process.env.TSB_SECRET}.technologiestiftung-berlin.de/Altarm_RUH_${moment().format('YYMMDD')}_0040.txt`)
       .then((data) => {
-        return csv(extractAndCleanBwb(data), '\t')
+        return csv(extractAndCleanBwb(data).csvString, '\t')
       })
-      .then((data) => {
-        const buff = csv2buffer(transformBwb(data))
-        return Promise.all([
-          uploadAWS(s3, buff, `wastewater/${moment().format('YYYY-MM-DD_hh-mm-ss')}.csv`),
-          uploadAWS(s3, buff, 'wastewater/latest.csv')
+      .then(async (data) => {
+        data = transformBwb(data)
+
+        const csvBuff = csv2buffer(data)
+        await Promise.all([
+          uploadAWS(s3, csvBuff, `wastewater/${moment().format('YYYY-MM-DD_hh-mm-ss')}.csv`),
+          uploadAWS(s3, csvBuff, 'wastewater/latest.csv')
         ])
+
+        const jsonBuff = json2buffer(csv2json(data))
+        await Promise.all([
+          uploadAWS(s3, jsonBuff, `wastewater/${moment().format('YYYY-MM-DD_hh-mm-ss')}.json`),
+          uploadAWS(s3, jsonBuff, 'wastewater/latest.json')
+        ])
+
+        return Promise.resolve()
       })
   })
   .catch((err) => {

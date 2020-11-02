@@ -1,11 +1,16 @@
 const https = require("https");
+const http = require("http");
 const parse = require("csv-parse");
 const moment = require("moment-timezone");
 const AWS = require("aws-sdk");
 
 const get = (url) =>
   new Promise((resolve, reject) => {
-    https
+    let protocol = https;
+    if (url.substring(0, 5).toLowerCase() !== "https") {
+      protocol = http;
+    }
+    protocol
       .get(url, (response) => {
         let body = "";
         response.on("data", (chunk) => {
@@ -38,9 +43,14 @@ const csv = (csvString, delimiter) =>
 
 const transform = (csvObj) => {
   csvObj.forEach((row) => {
+    /*
+     * according to the original R-Script this was supplied as a unix timestamp
+     * row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).unix()
+     * now changed according to issue #6, https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer/issues/6
+     */
     row.Datum = moment(row.Datum, "DD.MM.YYYY hh:mm")
       .tz("Europe/Berlin", true)
-      .unix();
+      .format("YYYY-MM-DD hh:mm:ss");
     row.Einzelwert = parseFloat(row.Einzelwert.replace(",", "."));
     if (row.Einzelwert === -777) {
       row.Einzelwert = "NA";
@@ -51,8 +61,10 @@ const transform = (csvObj) => {
 
 const transformBwb = (csvObj) => {
   csvObj.forEach((row) => {
-    row.date = moment(row.date, "DD.MM.YYYY").format("YYYY-MM-DD");
-    row.value = parseFloat(row.value.replace(",", "."));
+    row.date = moment(row.date, "DD.MM.YYYY").format("YYYY-MM-DD hh:mm:ss");
+    if (typeof row.value === "string") {
+      row.value = parseFloat(row.value.replace(",", "."));
+    }
   });
   return csvObj;
 };
@@ -108,12 +120,33 @@ const csv2buffer = (csvObj) => {
   return Buffer.from(csvString, "utf8");
 };
 
+const csv2json = (csvObj) => {
+  const json = { data: [] };
+
+  const columns = Object.keys(csvObj[0]);
+  csvObj.forEach((row) => {
+    const data = {};
+    columns.forEach((column) => {
+      if (column === "date" || column === "Datum") {
+        data.date = row[column];
+      } else {
+        data.value = row[column];
+      }
+    });
+    json.data.push(data);
+  });
+
+  return json;
+};
+
+const json2buffer = (jsonObj) => {
+  return Buffer.from(JSON.stringify(jsonObj), "utf8");
+};
+
 const uploadAWS = (s3, fileContent, target) =>
   new Promise((resolve, reject) => {
-    if (process.env.NODE_ENV !== "test") {
-      if (!("S3_BUCKET" in process.env)) {
-        reject(Error("S3_BUCKET is required as an environmental variable"));
-      }
+    if (!("S3_BUCKET" in process.env)) {
+      reject(Error("S3_BUCKET is required as an environmental variable"));
     }
 
     const params = {
@@ -137,6 +170,8 @@ module.exports = {
   extractAndClean,
   extractAndCleanBwb,
   get,
+  csv2json,
+  json2buffer,
   setupAWS,
   transform,
   transformBwb,
