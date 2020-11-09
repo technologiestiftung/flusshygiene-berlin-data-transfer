@@ -5,9 +5,9 @@ const moment = require('moment-timezone')
 const AWS = require('aws-sdk')
 
 const get = (url) => new Promise((resolve, reject) => {
-  let protocol = https;
+  let protocol = https
   if (url.substring(0, 5).toLowerCase() !== 'https') {
-    protocol = http;
+    protocol = http
   }
   protocol.get(url, (response) => {
     let body = ''
@@ -41,11 +41,12 @@ const transform = (csvObj) => {
      * now changed according to issue #6, https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer/issues/6
      */
     row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).format('YYYY-MM-DD hh:mm:ss')
-    row.Einzelwert = parseFloat(row.Einzelwert.replace(',', '.'))
-    if (row.Einzelwert === -777) {
-      row.Einzelwert = 'NA'
+    if (row.Einzelwert) {
+      row.Einzelwert = parseFloat(row.Einzelwert.replace(',', '.'))
     }
   })
+  // in the original R-Script null values/-777 were transformed to NA, now we remove empty values
+  csvObj = csvObj.filter((row) => (row.Einzelwert && row.Einzelwert !== -777 && !isNaN(row.Einzelwert)))
   return csvObj
 }
 
@@ -123,7 +124,7 @@ const csv2json = (csvObj) => {
 }
 
 const json2buffer = (jsonObj) => {
-  return Buffer.from(JSON.stringify(jsonObj), 'utf8') 
+  return Buffer.from(JSON.stringify(jsonObj), 'utf8')
 }
 
 const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => {

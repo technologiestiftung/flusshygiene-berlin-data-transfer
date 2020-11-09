@@ -29,8 +29,8 @@ test('parse csv string', () => {
 })
 
 test('transform csv values', () => {
-  expect(transform([ { Datum: '08.07.2019 00:00', Einzelwert: '7,40' }, { Datum: '08.07.2019 00:15', Einzelwert: '7,80' }, { Datum: '08.07.2019 00:15', Einzelwert: '-777' } ]))
-    .toStrictEqual([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 'NA' } ])
+  expect(transform([ { Datum: '08.07.2019 00:00', Einzelwert: '7,40' }, { Datum: '08.07.2019 00:15', Einzelwert: '7,80' }, { Datum: '08.07.2019 00:15', Einzelwert: '-777' }, { Datum: '08.07.2019 00:15', Einzelwert: false }, { Datum: '08.07.2019 00:15', Einzelwert: null }, { Datum: '08.07.2019 00:15' } ]))
+    .toStrictEqual([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 } ])
 })
 
 test('transform csv to json', () => {
