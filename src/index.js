@@ -123,6 +123,11 @@ const csv2json = (csvObj) => {
   return json
 }
 
+// date needs to be provided in the format YYYY-MM-DD
+const filterByDate = (data, date) =>  {
+  return data.filter((d) => d.date.split(' ')[0] === date)
+}
+
 const json2buffer = (jsonObj) => {
   return Buffer.from(JSON.stringify(jsonObj), 'utf8')
 }
@@ -147,4 +152,4 @@ const uploadAWS = (s3, fileContent, target) => new Promise((resolve, reject) => 
   })
 })
 
-module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, get, csv2json, json2buffer, setupAWS, transform, transformBwb, uploadAWS }
+module.exports = { csv, csv2buffer, extractAndClean, extractAndCleanBwb, filterByDate, get, csv2json, json2buffer, setupAWS, transform, transformBwb, uploadAWS }

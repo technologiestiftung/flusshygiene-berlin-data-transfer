@@ -2,7 +2,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const { csv, csv2buffer, extractAndClean, extractAndCleanBwb, transformBwb, get, setupAWS, transform, uploadAWS, json2buffer, csv2json } = require("./src/index");
+const { csv, csv2buffer, extractAndClean, extractAndCleanBwb, filterByDate, transformBwb, get, setupAWS, transform, uploadAWS, json2buffer, csv2json } = require("./src/index");
 
 // Testing the pipeline for downloading, transforming and uploading data from the Berlin Senate
 
@@ -36,6 +36,11 @@ test('transform csv values', () => {
 test('transform csv to json', () => {
   expect(csv2json([ { Datum: '2019-07-08 12:00:00', Einzelwert: 7.4 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 7.8 }, { Datum: '2019-07-08 12:15:00', Einzelwert: 'NA' } ]))
     .toStrictEqual({ data: [ { date: '2019-07-08 12:00:00', value: 7.4 }, { date: '2019-07-08 12:15:00', value: 7.8 }, { date: '2019-07-08 12:15:00', value: 'NA' } ]})
+})
+
+test('filter by date', () => {
+  expect(filterByDate([{date: '2019-07-08 12:00:00'},{date: '2019-07-08 15:00:00'},{date: '2019-07-09 12:00:00'},{date: '2019-07-10 12:00:00'}], '2019-07-08'))
+    .toStrictEqual([{date: '2019-07-08 12:00:00'},{date: '2019-07-08 15:00:00'}])
 })
 
 test('setup aws client', () => {
