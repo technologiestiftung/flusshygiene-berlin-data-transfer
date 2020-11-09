@@ -1,0 +1,27 @@
+name: Cronjob
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET }}
+  TSB_SECRET: ${{ secrets.TSB_SECRET }}
+on:
+  workflow_dispatch:
+  schedule:
+    # every day at 3
+    # https://crontab.guru/#0_3_*_*_*
+    - cron: "0 3 * * *"
+
+jobs:
+  collect_data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js from nvm
+        shell: bash -l {0}
+        run: nvm install
+      - name: install deps
+        run: npm ci
+      - name: exec
+        run: node index.js

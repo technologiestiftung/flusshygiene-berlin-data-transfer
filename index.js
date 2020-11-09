@@ -18,7 +18,9 @@ Promise.all(config.stations.map((station) => {
       return csv(extractAndClean(data).csvString, ';')
     })
     .then(async (data) => {
-      const csvBuff = csv2buffer(transform(data))
+      data = filterByDate(transform(data), moment().subtract(1, 'day').format('YYYY-MM-DD'))
+
+      const csvBuff = csv2buffer(data)
       await Promise.all([
         uploadAWS(s3, csvBuff, `stations/${station}/${moment().format('YYYY-MM-DD_hh-mm-ss')}.csv`),
         uploadAWS(s3, csvBuff, `stations/${station}/latest.csv`)
@@ -39,7 +41,7 @@ Promise.all(config.stations.map((station) => {
         return csv(extractAndCleanBwb(data).csvString, '\t')
       })
       .then(async (data) => {
-        data = transformBwb(data)
+        data = filterByDate(transformBwb(data), moment().subtract(1, 'day').format('YYYY-MM-DD'))
 
         const csvBuff = csv2buffer(data)
         await Promise.all([
