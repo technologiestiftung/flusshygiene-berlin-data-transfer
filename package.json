@@ -4,8 +4,9 @@
   "description": "Aggregate, clean and store data required for the modelling of bathing water in Berlin, through the respective flusshygiene plattform",
   "main": "index.js",
   "scripts": {
+    "dev": "node -r dotenv/config index.js",
     "test": "jest",
-    "lint": "eslint index.js src/index.js"
+    "lint": "eslint index.js lib/*.js"
   },
   "repository": {
     "type": "git",
@@ -18,20 +19,19 @@
   },
   "homepage": "https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer#readme",
   "dependencies": {
-    "aws-sdk": "^2.710.0",
-    "csv-parse": "^4.10.1",
-    "dotenv": "^8.2.0",
-    "moment": "^2.27.0",
-    "moment-timezone": "^0.5.31"
+    "aws-sdk": "2.710.0",
+    "csv-parse": "4.10.1",
+    "moment": "2.27.0",
+    "moment-timezone": "0.5.31"
   },
   "devDependencies": {
+    "dotenv": "8.2.0",
     "@types/jest": "26.0.15",
     "eslint": "7.4.0",
-    "eslint-config-standard": "14.1.1",
-    "eslint-plugin-import": "2.22.0",
-    "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-promise": "4.2.1",
-    "eslint-plugin-standard": "4.0.1",
-    "jest": "26.1.0"
+    "eslint-config-prettier": "6.15.0",
+    "eslint-plugin-jest": "24.1.0",
+    "eslint-plugin-prettier": "3.1.4",
+    "jest": "26.1.0",
+    "prettier": "2.1.2"
   }
 }

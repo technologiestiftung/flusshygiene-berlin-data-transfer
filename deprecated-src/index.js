@@ -1,4 +1,3 @@
-// @ts-check
 const https = require("https");
 const http = require("http");
 const parse = require("csv-parse");
@@ -9,7 +8,6 @@ const get = (url) =>
   new Promise((resolve, reject) => {
     let protocol = https;
     if (url.substring(0, 5).toLowerCase() !== "https") {
-      // @ts-ignore
       protocol = http;
     }
     protocol
@@ -53,11 +51,14 @@ const transform = (csvObj) => {
     row.Datum = moment(row.Datum, "DD.MM.YYYY hh:mm")
       .tz("Europe/Berlin", true)
       .format("YYYY-MM-DD hh:mm:ss");
-    row.Einzelwert = parseFloat(row.Einzelwert.replace(",", "."));
-    if (row.Einzelwert === -777) {
-      row.Einzelwert = "NA";
+    if (row.Einzelwert) {
+      row.Einzelwert = parseFloat(row.Einzelwert.replace(",", "."));
     }
   });
+  // in the original R-Script null values/-777 were transformed to NA, now we remove empty values
+  csvObj = csvObj.filter(
+    (row) => row.Einzelwert && row.Einzelwert !== -777 && !isNaN(row.Einzelwert)
+  );
   return csvObj;
 };
 
@@ -92,15 +93,13 @@ const extractAndCleanBwb = (csvString) => {
 };
 
 const setupAWS = () => {
-  if (process.env.NODE_ENV !== "test") {
-    if (
-      !("AWS_ACCESS_KEY_ID" in process.env) ||
-      !("AWS_SECRET_ACCESS_KEY" in process.env)
-    ) {
-      throw Error(
-        "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required as environmental variables"
-      );
-    }
+  if (
+    !("AWS_ACCESS_KEY_ID" in process.env) ||
+    !("AWS_SECRET_ACCESS_KEY" in process.env)
+  ) {
+    throw Error(
+      "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required as environmental variables"
+    );
   }
 
   return new AWS.S3({
@@ -141,14 +140,19 @@ const csv2json = (csvObj) => {
   return json;
 };
 
+// date needs to be provided in the format YYYY-MM-DD
+const filterByDate = (data, date) => {
+  return data.filter((d) => d.date.split(" ")[0] === date);
+};
+
 const json2buffer = (jsonObj) => {
   return Buffer.from(JSON.stringify(jsonObj), "utf8");
 };
 
-const uploadAWS = async (s3, fileContent, target) => {
-  try {
+const uploadAWS = (s3, fileContent, target) =>
+  new Promise((resolve, reject) => {
     if (!("S3_BUCKET" in process.env)) {
-      throw new Error("S3_BUCKET is required as an environmental variable");
+      reject(Error("S3_BUCKET is required as an environmental variable"));
     }
 
     const params = {
@@ -156,19 +160,22 @@ const uploadAWS = async (s3, fileContent, target) => {
       Key: target,
       Body: fileContent,
     };
-    const data = await s3.upload(params).promise();
-    return data;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+
+    s3.upload(params, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
 
 module.exports = {
   csv,
   csv2buffer,
   extractAndClean,
   extractAndCleanBwb,
+  filterByDate,
   get,
   csv2json,
   json2buffer,
