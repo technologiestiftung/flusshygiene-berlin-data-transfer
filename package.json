@@ -25,13 +25,14 @@
     "moment-timezone": "0.5.31"
   },
   "devDependencies": {
-    "dotenv": "8.2.0",
     "@types/jest": "26.0.15",
+    "dotenv": "8.2.0",
     "eslint": "7.4.0",
     "eslint-config-prettier": "6.15.0",
     "eslint-plugin-jest": "24.1.0",
     "eslint-plugin-prettier": "3.1.4",
     "jest": "26.1.0",
+    "msw": "0.21.3",
     "prettier": "2.1.2"
   }
 }
