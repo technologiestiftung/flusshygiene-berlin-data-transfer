@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tests by @sebastian-meier BWB: get csv file 1`] = `
+"	Altarm Ruhleben m3/d		
+25.08.2020	935,012621		
+26.08.2020	83507,58802		
+27.08.2020	9320,413933		
+"
+`;
