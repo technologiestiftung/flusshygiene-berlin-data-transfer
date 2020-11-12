@@ -1,14 +1,13 @@
-// if (process.env.NODE_ENV !== "production") {
+// if (process.env.NODE_ENV === "production") {
 //   require("dotenv").config();
 // }
-// eslint-disable-next-line no-unused-vars
-// @ts-check
 
 const {
   csv,
   csv2buffer,
   extractAndClean,
   extractAndCleanBwb,
+  filterByDate,
   transformBwb,
   get,
   setupAWS,
@@ -18,40 +17,12 @@ const {
   csv2json,
 } = require("../lib/util");
 
-jest.mock("aws-sdk", () => {
-  return {
-    S3: jest.fn(() => {
-      return {
-        upload: jest.fn().mockReturnThis(),
-        promise: jest.fn().mockResolvedValue({
-          ETag: "mock-etag",
-          Location: "mock-location",
-        }),
-      };
-    }),
-  };
-});
+describe("Tests by @sebastian-meier", () => {
+  // Testing the pipeline for downloading, transforming and uploading data from the Berlin Senate
 
-afterEach(() => {
-  jest.clearAllMocks();
-});
-afterAll(() => {
-  jest.resetAllMocks();
-});
-
-// Testing the pipeline for downloading, transforming and uploading data from the Berlin Senate
-
-describe("ff6347 tests", () => {
   test("get csv file", async () => {
-    const data = await get(
-      "https://raw.githubusercontent.com/technologiestiftung/flusshygiene-berlin-data-transfer/master/test/test.csv"
-    );
-    expect(data).toMatchInlineSnapshot(`
-    "Datum;Einzelwert;\\"Stationsnummer: 5803200\\";\\"Stationsname: Tiefwerder\\";\\"Gew�sser: Havel\\";\\"Durchfluss im m�/s\\";\\"Fehlwerte: -777\\"
-    \\"08.07.2019 00:00\\";7,40
-    \\"08.07.2019 00:15\\";7,80
-    "
-  `);
+    const data = await get("https://example.com/__tests__/test.csv");
+    expect(data).toMatchSnapshot();
   });
 
   test("clean csv string", () => {
@@ -79,12 +50,16 @@ describe("ff6347 tests", () => {
   });
 
   test("transform csv values", () => {
-    const res = transform([
-      { Datum: "08.07.2019 00:00", Einzelwert: "7,40" },
-      { Datum: "08.07.2019 00:15", Einzelwert: "7,80" },
-      { Datum: "08.07.2019 00:15", Einzelwert: "-777" },
-    ]);
-    expect(res).toStrictEqual([
+    expect(
+      transform([
+        { Datum: "08.07.2019 00:00", Einzelwert: "7,40" },
+        { Datum: "08.07.2019 00:15", Einzelwert: "7,80" },
+        { Datum: "08.07.2019 00:15", Einzelwert: "-777" },
+        { Datum: "08.07.2019 00:15", Einzelwert: false },
+        { Datum: "08.07.2019 00:15", Einzelwert: null },
+        { Datum: "08.07.2019 00:15" },
+      ])
+    ).toStrictEqual([
       { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
       { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
     ]);
@@ -106,48 +81,79 @@ describe("ff6347 tests", () => {
     });
   });
 
+  test("filter by date", () => {
+    const data = [
+      { date: "2019-07-08 12:00:00" },
+      { date: "2019-07-08 15:00:00" },
+      { date: "2019-07-09 12:00:00" },
+      { date: "2019-07-10 12:00:00" },
+    ];
+    const result = [
+      { date: "2019-07-08 12:00:00" },
+      { date: "2019-07-08 15:00:00" },
+    ];
+    expect(filterByDate(data, "2019-07-08", "date")).toStrictEqual(result);
+  });
+
   test("setup aws client", () => {
     expect(typeof setupAWS()).toBe("object");
   });
 
-  test("upload to AWS (csv)", async () => {
-    const s3 = setupAWS();
-    const data = [
-      { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-      { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-    ];
-    const buffer = csv2buffer(data);
-    await uploadAWS(s3, buffer, "test/test.csv");
-    expect(s3.upload).toHaveBeenCalledTimes(1);
-    expect(s3.upload).toHaveBeenCalledWith({
-      Bucket: "",
-      Body: buffer,
-      Key: "test/test.csv",
-    });
+  test.skip("upload to AWS (csv)", async () => {
+    try {
+      const data = await uploadAWS(
+        setupAWS(),
+        csv2buffer([
+          { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
+          { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
+        ]),
+        "test/test.csv"
+      );
+      const data_1 = await get(data.Location);
+      const data_2 = await csv(data_1, ",");
+      expect(data_2).toStrictEqual([
+        { Datum: "2019-07-08 12:00:00", Einzelwert: "7.4" },
+        { Datum: "2019-07-08 12:15:00", Einzelwert: "7.8" },
+      ]);
+    } catch (err) {
+      throw err;
+    }
   });
 
-  test("upload to AWS (json)", async () => {
-    const s3 = setupAWS();
-    const data = [
-      { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-      { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-    ];
-    const buffer = json2buffer(csv2json(data));
-    await uploadAWS(s3, buffer, "test/test.json");
-    expect(s3.upload).toHaveBeenCalledTimes(1);
-    expect(s3.upload).toHaveBeenCalledWith({
-      Bucket: "",
-      Body: buffer,
-      Key: "test/test.json",
-    });
+  test.skip("upload to AWS (json)", () => {
+    return uploadAWS(
+      setupAWS(),
+      json2buffer(
+        csv2json([
+          { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
+          { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
+        ])
+      ),
+      "test/test.json"
+    )
+      .then((data) => {
+        return get(data.Location);
+      })
+      .then((data) => {
+        return JSON.parse(data);
+      })
+      .then((data) => {
+        expect(data).toStrictEqual({
+          data: [
+            { date: "2019-07-08 12:00:00", value: 7.4 },
+            { date: "2019-07-08 12:15:00", value: 7.8 },
+          ],
+        });
+      })
+      .catch((err) => {
+        throw err;
+      });
   });
 
   // Testing the pipeline for downloading, transforming and uploading data from the Berlin Water Service (uploading to AWS is not tested, as there is no difference to the above)
 
   test("BWB: get csv file", async () => {
-    const data = await get(
-      "https://raw.githubusercontent.com/technologiestiftung/flusshygiene-berlin-data-transfer/master/test/bwb.txt"
-    );
+    const data = await get("https://example.com/__tests__/bwb.txt");
     expect(data).toMatchSnapshot();
   });
 

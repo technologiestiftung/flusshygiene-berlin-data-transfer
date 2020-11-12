@@ -1,3 +1,4 @@
+const server = require("./mocks/server");
 if (process.env.S3_BUCKET === undefined) {
   process.env.S3_BUCKET = "";
 }
@@ -11,3 +12,18 @@ if (process.env.TSB_SECRET === undefined) {
   process.env.TSB_SECRET = "";
 }
 jest.useFakeTimers();
+
+beforeAll(() => {
+  // Enable the mocking in tests.
+  server.listen();
+});
+
+afterEach(() => {
+  // Reset any runtime handlers tests may use.
+  server.resetHandlers();
+});
+
+afterAll(() => {
+  // Clean up once the tests are done.
+  server.close();
+});
