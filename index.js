@@ -2,9 +2,6 @@
 //   require('dotenv').config()
 // }
 // @ts-check
-if (!("TSB_SECRET" in process.env)) {
-  throw Error("TSB_SECRET is required as environmental variable");
-}
 
 const config = require("./config.json");
 const moment = require("moment");
@@ -23,85 +20,73 @@ const {
   json2buffer,
 } = require("./lib/util");
 
+if (!("TSB_SECRET" in process.env)) {
+  throw Error("TSB_SECRET is required as environmental variable");
+}
+
 const s3 = setupAWS();
 
 Promise.all(
-  config.stations.map((station) => {
-    return get(
+  config.stations.map(async (station) => {
+    const data = await get(
       `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=w&smode=c&sdatum=`
-    )
-      .then((data) => {
-        return csv(extractAndClean(data).csvString, ";");
-      })
-      .then(async (data) => {
-        data = filterByDate(
-          transform(data),
-          moment().subtract(1, "day").format("YYYY-MM-DD")
-        );
-
-        const csvBuff = csv2buffer(data);
-        await Promise.all([
-          uploadAWS(
-            s3,
-            csvBuff,
-            `stations/${station}/${moment().format("YYYY-MM-DD_hh-mm-ss")}.csv`
-          ),
-          uploadAWS(s3, csvBuff, `stations/${station}/latest.csv`),
-        ]);
-
-        const jsonBuff = json2buffer(csv2json(data));
-        await Promise.all([
-          uploadAWS(
-            s3,
-            jsonBuff,
-            `stations/${station}/${moment().format("YYYY-MM-DD_hh-mm-ss")}.json`
-          ),
-          uploadAWS(s3, jsonBuff, `stations/${station}/latest.json`),
-        ]);
-
-        return Promise.resolve();
-      });
+    );
+    let cleanedData = await csv(extractAndClean(data).csvString, ";");
+    const transformedData = transform(cleanedData);
+    const date = moment().subtract(1, "day").format("YYYY-MM-DD");
+    const filteredData = filterByDate(transformedData, date, "Datum");
+    const csvBuff = csv2buffer(filteredData);
+    await Promise.all([
+      uploadAWS(
+        s3,
+        csvBuff,
+        `stations/${station}/${moment().format("YYYY-MM-DD_hh-mm-ss")}.csv`
+      ),
+      uploadAWS(s3, csvBuff, `stations/${station}/latest.csv`),
+    ]);
+    const jsonBuff = json2buffer(csv2json(cleanedData));
+    await Promise.all([
+      uploadAWS(
+        s3,
+        jsonBuff,
+        `stations/${station}/${moment().format("YYYY-MM-DD_hh-mm-ss")}.json`
+      ),
+      uploadAWS(s3, jsonBuff, `stations/${station}/latest.json`),
+    ]);
+    return Promise.resolve();
   })
 )
-  .then(() => {
-    return get(
+  .then(async () => {
+    const data = await get(
       `http://${
         process.env.TSB_SECRET
       }.technologiestiftung-berlin.de/Altarm_RUH_${moment().format(
         "YYMMDD"
       )}_0040.txt`
-    )
-      .then((data) => {
-        return csv(extractAndCleanBwb(data).csvString, "\t");
-      })
-      .then(async (data) => {
-        data = filterByDate(
-          transformBwb(data),
-          moment().subtract(1, "day").format("YYYY-MM-DD")
-        );
-
-        const csvBuff = csv2buffer(data);
-        await Promise.all([
-          uploadAWS(
-            s3,
-            csvBuff,
-            `wastewater/${moment().format("YYYY-MM-DD_hh-mm-ss")}.csv`
-          ),
-          uploadAWS(s3, csvBuff, "wastewater/latest.csv"),
-        ]);
-
-        const jsonBuff = json2buffer(csv2json(data));
-        await Promise.all([
-          uploadAWS(
-            s3,
-            jsonBuff,
-            `wastewater/${moment().format("YYYY-MM-DD_hh-mm-ss")}.json`
-          ),
-          uploadAWS(s3, jsonBuff, "wastewater/latest.json"),
-        ]);
-
-        return Promise.resolve();
-      });
+    );
+    let cleanedData = await csv(extractAndCleanBwb(data).csvString, "\t");
+    const transformedData = transformBwb(cleanedData);
+    const date = moment().subtract(1, "day").format("YYYY-MM-DD");
+    const filteredData = filterByDate(transformedData, date, "date");
+    const csvBuff = csv2buffer(filteredData);
+    await Promise.all([
+      uploadAWS(
+        s3,
+        csvBuff,
+        `wastewater/${moment().format("YYYY-MM-DD_hh-mm-ss")}.csv`
+      ),
+      uploadAWS(s3, csvBuff, "wastewater/latest.csv"),
+    ]);
+    const jsonBuff = json2buffer(csv2json(cleanedData));
+    await Promise.all([
+      uploadAWS(
+        s3,
+        jsonBuff,
+        `wastewater/${moment().format("YYYY-MM-DD_hh-mm-ss")}.json`
+      ),
+      uploadAWS(s3, jsonBuff, "wastewater/latest.json"),
+    ]);
+    return Promise.resolve();
   })
   .catch((err) => {
     throw err;
