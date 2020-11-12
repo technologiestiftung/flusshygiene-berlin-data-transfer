@@ -88,50 +88,42 @@ describe("Tests by @sebastian-meier", () => {
   });
 
   test("filter by date", () => {
-    expect(
-      filterByDate(
-        [
-          { date: "2019-07-08 12:00:00" },
-          { date: "2019-07-08 15:00:00" },
-          { date: "2019-07-09 12:00:00" },
-          { date: "2019-07-10 12:00:00" },
-        ],
-        "2019-07-08"
-      )
-    ).toStrictEqual([
+    const data = [
       { date: "2019-07-08 12:00:00" },
       { date: "2019-07-08 15:00:00" },
-    ]);
+      { date: "2019-07-09 12:00:00" },
+      { date: "2019-07-10 12:00:00" },
+    ];
+    const result = [
+      { date: "2019-07-08 12:00:00" },
+      { date: "2019-07-08 15:00:00" },
+    ];
+    expect(filterByDate(data, "2019-07-08", "date")).toStrictEqual(result);
   });
 
   test("setup aws client", () => {
     expect(typeof setupAWS()).toBe("object");
   });
 
-  test.skip("upload to AWS (csv)", () => {
-    return uploadAWS(
-      setupAWS(),
-      csv2buffer([
-        { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-        { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-      ]),
-      "test/test.csv"
-    )
-      .then((data) => {
-        return get(data.Location);
-      })
-      .then((data) => {
-        return csv(data, ",");
-      })
-      .then((data) => {
-        expect(data).toStrictEqual([
-          { Datum: "2019-07-08 12:00:00", Einzelwert: "7.4" },
-          { Datum: "2019-07-08 12:15:00", Einzelwert: "7.8" },
-        ]);
-      })
-      .catch((err) => {
-        throw err;
-      });
+  test.skip("upload to AWS (csv)", async () => {
+    try {
+      const data = await uploadAWS(
+        setupAWS(),
+        csv2buffer([
+          { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
+          { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
+        ]),
+        "test/test.csv"
+      );
+      const data_1 = await get(data.Location);
+      const data_2 = await csv(data_1, ",");
+      expect(data_2).toStrictEqual([
+        { Datum: "2019-07-08 12:00:00", Einzelwert: "7.4" },
+        { Datum: "2019-07-08 12:15:00", Einzelwert: "7.8" },
+      ]);
+    } catch (err) {
+      throw err;
+    }
   });
 
   test.skip("upload to AWS (json)", () => {
