@@ -44,7 +44,7 @@ async function main() {
         ),
         uploadAWS(s3, csvBuff, `stations/${station}/latest.csv`),
       ]);
-      const jsonBuff = json2buffer(csv2json(cleanedData));
+      const jsonBuff = json2buffer(csv2json(filteredData));
       await Promise.all([
         uploadAWS(
           s3,
