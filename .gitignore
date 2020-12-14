@@ -106,3 +106,8 @@ dist
 # TernJS port file
 .tern-port
 .vscode/settings.json
+terraform/.terraform/plugins/darwin_amd64/lock.json
+terraform/.terraform/plugins/darwin_amd64/terraform-provider-aws_v3.21.0_x5
+terraform/terraform.tfstate.backup
+terraform/terraform.tfstate
+terraform/terraform.tfvars
