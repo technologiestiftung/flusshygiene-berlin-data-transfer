@@ -19,8 +19,8 @@
   },
   "homepage": "https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer#readme",
   "dependencies": {
-    "aws-sdk": "2.810.0",
-    "csv-parse": "4.14.1",
+    "aws-sdk": "2.819.0",
+    "csv-parse": "4.14.2",
     "moment": "2.29.1",
     "moment-timezone": "0.5.32"
   },
