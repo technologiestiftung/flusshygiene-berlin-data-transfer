@@ -28,11 +28,19 @@ async function main() {
 
   Promise.all(
     config.stations.map(async (station) => {
+      /**
+       * m daily
+       * w all 15 mins
+       * @type {"m" | "w"}
+       */
+      const sreihe = "m";
+      const smode = "c";
+      const sdatum = moment().subtract(5, "day").format("DD.MM.YYYY");
       const data = await get(
-        `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=m&smode=c&sdatum=01.01.2021`
+        `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=${sreihe}&smode=${smode}&sdatum=${sdatum}`
       );
       let cleanedData = await csv(extractAndClean(data).csvString, ";");
-      const transformedData = transform(cleanedData);
+      const transformedData = transform(cleanedData, sreihe);
       const date = moment().subtract(1, "day").format("YYYY-MM-DD");
       const filteredData = filterByDate(transformedData, date, "Datum");
       const csvBuff = csv2buffer(filteredData);
