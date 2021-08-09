@@ -6,11 +6,13 @@ env:
   S3_BUCKET: ${{ secrets.S3_BUCKET }}
   TSB_SECRET: ${{ secrets.TSB_SECRET }}
 on:
-  workflow_dispatch:
-  schedule:
-    # every day at 3
-    # https://crontab.guru/#0_3_*_*_*
-    - cron: "0 3 * * *"
+  repository_dispatch:
+    types: [pipedream]
+  workflow_dispatch: {}
+  # schedule:
+  #   # every day at 3
+  #   # https://crontab.guru/#0_3_*_*_*
+  #   - cron: "0 3 * * *"
 
 jobs:
   collect_data:
@@ -18,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Dispatcher
+        run: echo "${{ github.event.client_payload.source }}"
       - name: Use Node.js from nvm
         shell: bash -l {0}
         run: nvm install
