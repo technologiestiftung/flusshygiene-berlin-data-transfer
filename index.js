@@ -1,9 +1,7 @@
-// if (process.env.NODE_ENV !== 'production') {
-//   require('dotenv').config()
-// }
 // @ts-check
 
 const config = require("./config.json");
+const getLatestBWBFile = require("./lib/get-last-bwb-file");
 const moment = require("moment");
 const {
   csv,
@@ -36,10 +34,21 @@ async function main() {
       const sreihe = "m";
       const smode = "c";
       const sdatum = moment().subtract(5, "day").format("DD.MM.YYYY");
-      const data = await get(
-        `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=${sreihe}&smode=${smode}&sdatum=${sdatum}`
-      );
-      let cleanedData = await csv(extractAndClean(data).csvString, ";");
+      let data;
+      let cleanedData;
+      try {
+        data = await get(
+          `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=${sreihe}&smode=${smode}&sdatum=${sdatum}`
+        );
+      } catch (error) {
+        throw error;
+      }
+      try {
+        cleanedData = await csv(extractAndClean(data).csvString, ";");
+      } catch (error) {
+        throw error;
+      }
+
       const transformedData = transform(cleanedData, sreihe);
       const date = moment().subtract(1, "day").format("YYYY-MM-DD");
       const filteredData = filterByDate(transformedData, date, "Datum");
@@ -65,17 +74,23 @@ async function main() {
     })
   )
     .then(async () => {
-      const data = await get(
-        `http://${
-          process.env.TSB_SECRET
-        }.technologiestiftung-berlin.de/Altarm_RUH_${moment().format(
-          "YYMMDD"
-        )}_0040.txt`
-      );
+      let data;
+
+      try {
+        const url = await getLatestBWBFile();
+        data = await get(url);
+      } catch (err) {
+        throw err;
+      }
+
       let cleanedData = await csv(extractAndCleanBwb(data).csvString, "\t");
       const transformedData = transformBwb(cleanedData);
-      const date = moment().subtract(1, "day").format("YYYY-MM-DD");
+      const date = moment().subtract(5, "day").format("YYYY-MM-DD");
       const filteredData = filterByDate(transformedData, date, "date");
+      if (filteredData.length === 0) {
+        console.error("No bwb data found for the last 3 days");
+        return;
+      }
       const csvBuff = csv2buffer(filteredData);
       await Promise.all([
         uploadAWS(
