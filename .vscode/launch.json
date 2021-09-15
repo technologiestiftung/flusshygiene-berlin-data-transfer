@@ -8,10 +8,19 @@
       "runtimeExecutable": "node",
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch index.js",
       "runtimeArgs": ["-r", "dotenv/config"],
       "skipFiles": ["<node_internals>/**", "node_modules/**"],
       "program": "${workspaceFolder}/index.js"
+    },
+    {
+      "runtimeExecutable": "node",
+      "type": "node",
+      "request": "launch",
+      "name": "Launch get-last-bwb-file.js",
+      "runtimeArgs": ["-r", "dotenv/config"],
+      "skipFiles": ["<node_internals>/**", "node_modules/**"],
+      "program": "${workspaceFolder}/lib/get-last-bwb-file.js"
     }
   ]
 }
