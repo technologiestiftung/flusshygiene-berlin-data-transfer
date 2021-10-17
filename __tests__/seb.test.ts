@@ -2,20 +2,12 @@
 //   require("dotenv").config();
 // }
 
-const {
-  csv,
-  csv2buffer,
-  extractAndClean,
-  extractAndCleanBwb,
-  filterByDate,
-  transformBwb,
-  get,
-  setupAWS,
-  transform,
-  uploadAWS,
-  json2buffer,
-  csv2json,
-} = require("../lib/util");
+import { setupAWS } from "../lib/aws";
+import { csv } from "../lib/csv";
+import { extractAndClean, extractAndCleanBwb } from "../lib/extract-and-clean";
+import { filterByDate } from "../lib/filter";
+import { get } from "../lib/requests";
+import { transform, csv2json, transformBwb } from "../lib/transform";
 
 describe("Tests by @sebastian-meier", () => {
   // Testing the pipeline for downloading, transforming and uploading data from the Berlin Senate
@@ -55,8 +47,8 @@ describe("Tests by @sebastian-meier", () => {
         { Datum: "08.07.2019 00:00", Einzelwert: "7,40" },
         { Datum: "08.07.2019 00:15", Einzelwert: "7,80" },
         { Datum: "08.07.2019 00:15", Einzelwert: "-777" },
-        { Datum: "08.07.2019 00:15", Einzelwert: false },
-        { Datum: "08.07.2019 00:15", Einzelwert: null },
+        // { Datum: "08.07.2019 00:15", Einzelwert: false },
+        // { Datum: "08.07.2019 00:15", Einzelwert: null },
         { Datum: "08.07.2019 00:15" },
       ])
     ).toStrictEqual([
@@ -70,7 +62,7 @@ describe("Tests by @sebastian-meier", () => {
       csv2json([
         { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
         { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-        { Datum: "2019-07-08 12:15:00", Einzelwert: "NA" },
+        // { Datum: "2019-07-08 12:15:00", Einzelwert: "NA" },
       ])
     ).toStrictEqual({
       data: [
@@ -97,57 +89,6 @@ describe("Tests by @sebastian-meier", () => {
 
   test("setup aws client", () => {
     expect(typeof setupAWS()).toBe("object");
-  });
-
-  test.skip("upload to AWS (csv)", async () => {
-    try {
-      const data = await uploadAWS(
-        setupAWS(),
-        csv2buffer([
-          { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-          { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-        ]),
-        "test/test.csv"
-      );
-      const data_1 = await get(data.Location);
-      const data_2 = await csv(data_1, ",");
-      expect(data_2).toStrictEqual([
-        { Datum: "2019-07-08 12:00:00", Einzelwert: "7.4" },
-        { Datum: "2019-07-08 12:15:00", Einzelwert: "7.8" },
-      ]);
-    } catch (err) {
-      throw err;
-    }
-  });
-
-  test.skip("upload to AWS (json)", () => {
-    return uploadAWS(
-      setupAWS(),
-      json2buffer(
-        csv2json([
-          { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-          { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-        ])
-      ),
-      "test/test.json"
-    )
-      .then((data) => {
-        return get(data.Location);
-      })
-      .then((data) => {
-        return JSON.parse(data);
-      })
-      .then((data) => {
-        expect(data).toStrictEqual({
-          data: [
-            { date: "2019-07-08 12:00:00", value: 7.4 },
-            { date: "2019-07-08 12:15:00", value: 7.8 },
-          ],
-        });
-      })
-      .catch((err) => {
-        throw err;
-      });
   });
 
   // Testing the pipeline for downloading, transforming and uploading data from the Berlin Water Service (uploading to AWS is not tested, as there is no difference to the above)
