@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tests by @sebastian-meier BWB: get csv file 1`] = `
+"	Altarm Ruhleben m3/d		
+25.08.2020	935,012621		
+26.08.2020	83507,58802		
+27.08.2020	9320,413933		
+"
+`;
+
+exports[`Tests by @sebastian-meier get csv file 1`] = `
+"Datum;Einzelwert;\\"Stationsnummer: 5803200\\";\\"Stationsname: Tiefwerder\\";\\"Gew�sser: Havel\\";\\"Durchfluss im m�/s\\";\\"Fehlwerte: -777\\"
+\\"08.07.2019 00:00\\";7,40
+\\"08.07.2019 00:15\\";7,80
+"
+`;
