@@ -28,4 +28,4 @@ jobs:
       - name: install deps
         run: npm ci
       - name: exec
-        run: node index.js
+        run: ts-node index.js
