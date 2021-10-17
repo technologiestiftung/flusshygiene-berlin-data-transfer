@@ -1,4 +1,4 @@
-import { server } from "./__tests__/mocks/server";
+import { server } from "./src/__tests__/mocks/server";
 jest.useRealTimers();
 if (process.env.S3_BUCKET === undefined) {
   process.env.S3_BUCKET = "";

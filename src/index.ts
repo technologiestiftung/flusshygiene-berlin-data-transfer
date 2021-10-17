@@ -17,7 +17,7 @@ import { get } from "./lib/requests";
 import { readFileSync } from "fs";
 import { join } from "path";
 const config: { stations: string[] } = JSON.parse(
-  readFileSync(join(__dirname, "./config.json"), "utf8")
+  readFileSync(join(__dirname, "../config.json"), "utf8")
 );
 const s3 = setupAWS();
 if (!("TSB_SECRET" in process.env)) {

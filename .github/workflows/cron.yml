@@ -15,7 +15,7 @@ on:
   #   - cron: "0 3 * * *"
 
 jobs:
-  collect_data:
+  collect-data:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,7 +25,9 @@ jobs:
       - name: Use Node.js from nvm
         shell: bash -l {0}
         run: nvm install
-      - name: install deps
+      - name: install dependencies
         run: npm ci
-      - name: exec
-        run: ts-node index.js
+      - name: typechecking
+        run: npm run build
+      - name: exec data transfer
+        run: node build/index.js --unhandled-rejections=strict

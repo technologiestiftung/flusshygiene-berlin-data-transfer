@@ -27,7 +27,7 @@ export default {
   coverageDirectory: "coverage",
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ["/node_modules/", "__tests__/mocks/"],
+  coveragePathIgnorePatterns: ["/node_modules/", "__tests__/mocks/", "build"],
 
   // Indicates which provider should be used to instrument code for coverage
   coverageProvider: "v8",
@@ -128,7 +128,7 @@ export default {
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   setupFilesAfterEnv: ["./jest.setup.ts"],
-  testPathIgnorePatterns: ["./__tests__/mocks/", "./jest.setup.ts"],
+  testPathIgnorePatterns: ["./__tests__/mocks/", "./jest.setup.ts", "./build"],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
