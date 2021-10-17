@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { csv } from "../lib/csv";
+import { csvParser } from "../lib/csv";
 import { extractAndClean } from "../lib/extract-and-clean";
+import { RawCSVRow } from "../lib/transform";
 
 // https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=5803200&sreihe=m&smode=c&sdatum=10.10.2021
 const rawData = fs.readFileSync(
@@ -14,8 +15,8 @@ const rawData = fs.readFileSync(
 const data = extractAndClean(rawData);
 describe("testing csv readings", () => {
   test("should read csv file", async () => {
-    const csvData = await csv(data.csvString, ";");
-    console.log(csvData);
+    const csvData = await csvParser<RawCSVRow>(data.csvString, ";");
+    // console.log(csvData);
     expect(data).toBeTruthy();
     expect(csvData).toBeTruthy();
     expect(csvData[0]).toHaveProperty("Datum");

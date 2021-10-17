@@ -1,4 +1,3 @@
-//@ts-check
 import { rest } from "msw";
 import fs from "fs";
 import path from "path";
@@ -12,5 +11,3 @@ export const handlers = [
     return res(ctx.status(200), ctx.text(csvTxt));
   }),
 ];
-
-module.exports = handlers;

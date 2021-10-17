@@ -1,11 +1,5 @@
-// if (process.env.NODE_ENV !== "production") {
-//   require("dotenv").config();
-// }
-// eslint-disable-next-line no-unused-vars
-// @ts-check
-
 import { setupAWS, uploadAWS } from "../lib/aws";
-import { csv } from "../lib/csv";
+import { csvParser } from "../lib/csv";
 import { extractAndClean, extractAndCleanBwb } from "../lib/extract-and-clean";
 import { get } from "../lib/requests";
 import {
@@ -40,11 +34,9 @@ afterAll(() => {
 // Testing the pipeline for downloading, transforming and uploading data from the Berlin Senate
 
 describe("ff6347 tests", () => {
-  test.skip("get csv file", async () => {
-    const data = await get(
-      "https://raw.githubusercontent.com/technologiestiftung/flusshygiene-berlin-data-transfer/master/test/test.csv"
-    );
-    expect(data).not.toBeDefined();
+  test("get csv file", async () => {
+    const data = await get("https://example.com/__tests__/test.csv");
+    expect(data).toBeDefined();
   });
 
   test("clean csv string", () => {
@@ -61,7 +53,7 @@ describe("ff6347 tests", () => {
   });
 
   test("parse csv string", async () => {
-    const data = await csv(
+    const data = await csvParser<{ Datum: string; Einzelwert: string }[]>(
       'Datum;Einzelwert\n"08.07.2019 00:00";7,40\n"08.07.2019 00:15";7,80\n',
       ";"
     );
@@ -72,11 +64,14 @@ describe("ff6347 tests", () => {
   });
 
   test("transform csv values", () => {
-    const res = transform([
-      { Datum: "08.07.2019 00:00", Einzelwert: "7,40" },
-      { Datum: "08.07.2019 00:15", Einzelwert: "7,80" },
-      { Datum: "08.07.2019 00:15", Einzelwert: "-777" },
-    ]);
+    const res = transform(
+      [
+        { Datum: "08.07.2019 00:00", Einzelwert: "7,40" },
+        { Datum: "08.07.2019 00:15", Einzelwert: "7,80" },
+        { Datum: "08.07.2019 00:15", Einzelwert: "-777" },
+      ],
+      "m"
+    );
     expect(res).toStrictEqual([
       { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
       { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
@@ -137,10 +132,8 @@ describe("ff6347 tests", () => {
 
   // Testing the pipeline for downloading, transforming and uploading data from the Berlin Water Service (uploading to AWS is not tested, as there is no difference to the above)
 
-  test.skip("BWB: get csv file", async () => {
-    const data = await get(
-      "https://raw.githubusercontent.com/technologiestiftung/flusshygiene-berlin-data-transfer/master/test/bwb.txt"
-    );
+  test("BWB: get csv file", async () => {
+    const data = await get("https://example.com/__tests__/bwb.txt");
     expect(data).toMatchSnapshot();
   });
 
@@ -161,7 +154,7 @@ describe("ff6347 tests", () => {
   });
 
   test("BWB: parse csv string", async () => {
-    const data = await csv(
+    const data = await csvParser(
       `date\tvalue
 25.08.2020	935,012621
 26.08.2020	83507,58802

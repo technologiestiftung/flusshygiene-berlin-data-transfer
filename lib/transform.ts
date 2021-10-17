@@ -13,10 +13,9 @@ export interface RawCSVRow {
   Datum?: string;
 }
 export function transform(csvObj: RawCSVRow[], sreihe = "m"): CSVRow[] {
-  const result: CSVRow[] = [];
+  const parsed: CSVRow[] = [];
   csvObj.forEach((row: RawCSVRow) => {
     let item: CSVRow = {
-      date: undefined,
       Datum: undefined,
       Einzelwert: undefined,
       Tagesmittelwert: undefined,
@@ -26,19 +25,24 @@ export function transform(csvObj: RawCSVRow[], sreihe = "m"): CSVRow[] {
      * row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).unix()
      * now changed according to issue #6, https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer/issues/6
      */
-    const key = sreihe === "m" ? "Tagesmittelwert" : "Einzelwert";
+    const key = sreihe === "m" ? "Einzelwert" : "Tagesmittelwert";
     const dt = moment(row.Datum, "DD.MM.YYYY hh:mm")
       .tz("Europe/Berlin", true)
       .format("YYYY-MM-DD hh:mm:ss");
     row.Datum = dt;
-    item = { date: row.date, Datum: dt };
+    item = { Datum: dt };
     if (row[key] !== undefined) {
       item.Einzelwert = parseFloat(row[key]!.replace(",", "."));
 
       // if (key !== "Einzelwert") delete row[key];
     }
-    result.push(item);
+    parsed.push(item);
   });
+  const result = parsed
+    .filter((row) => row.Einzelwert !== undefined)
+    .filter((row) => row.Einzelwert !== -777)
+    .filter((row) => !isNaN(row.Einzelwert as number));
+
   // in the original R-Script null values/-777 were transformed to NA, now we remove empty values
   // csvObj = csvObj.filter(
   //   (row) => row.Einzelwert && row.Einzelwert !== -777 && !isNaN(row.Einzelwert)
@@ -80,7 +84,7 @@ export function json2buffer(jsonObj: Record<string, unknown>) {
   return Buffer.from(JSON.stringify(jsonObj), "utf8");
 }
 
-export const csv2json = (csvObj: CSVRow[]) => {
+export function csv2json(csvObj: CSVRow[]) {
   const json: { data: unknown[] } = { data: [] };
 
   const columns = Object.keys(csvObj[0]);
@@ -97,4 +101,4 @@ export const csv2json = (csvObj: CSVRow[]) => {
   });
 
   return json;
-};
+}

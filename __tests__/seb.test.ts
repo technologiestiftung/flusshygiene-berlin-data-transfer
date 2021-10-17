@@ -3,7 +3,7 @@
 // }
 
 import { setupAWS } from "../lib/aws";
-import { csv } from "../lib/csv";
+import { csvParser } from "../lib/csv";
 import { extractAndClean, extractAndCleanBwb } from "../lib/extract-and-clean";
 import { filterByDate } from "../lib/filter";
 import { get } from "../lib/requests";
@@ -31,7 +31,7 @@ describe("Tests by @sebastian-meier", () => {
   });
 
   test("parse csv string", async () => {
-    const data = await csv(
+    const data = await csvParser(
       'Datum;Einzelwert\n"08.07.2019 00:00";7,40\n"08.07.2019 00:15";7,80\n',
       ";"
     );
@@ -62,7 +62,9 @@ describe("Tests by @sebastian-meier", () => {
       csv2json([
         { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
         { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-        // { Datum: "2019-07-08 12:15:00", Einzelwert: "NA" },
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        { Datum: "2019-07-08 12:15:00", Einzelwert: "NA" },
       ])
     ).toStrictEqual({
       data: [
@@ -115,7 +117,7 @@ describe("Tests by @sebastian-meier", () => {
   });
 
   test("BWB: parse csv string", async () => {
-    const data = await csv(
+    const data = await csvParser(
       `date\tvalue
 25.08.2020	935,012621
 26.08.2020	83507,58802

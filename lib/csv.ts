@@ -1,13 +1,16 @@
-import csvtojson from "csvtojson";
-
-export async function csv<CSVData>(
+// import csv from "csvtojson";
+import neatCsv from "neat-csv";
+export async function csvParser<CSVData>(
   csvString: string | Buffer,
-  delimiter: string
+  separator: string
 ): Promise<CSVData[]> {
-  const json = await csvtojson({
-    trim: true,
-    delimiter,
-    ignoreEmpty: true,
-  }).fromString(csvString.toString());
-  return json as CSVData[];
+  try {
+    const json = await neatCsv<CSVData>(csvString.toString(), {
+      separator,
+    });
+    return json;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 }

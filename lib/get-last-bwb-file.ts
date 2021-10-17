@@ -38,7 +38,3 @@ export async function getLatestBWBFile() {
   }
   return lastWorkingUrl;
 }
-
-if (module === require.main) {
-  getLatestBWBFile().then(console.log).catch(console.error);
-}

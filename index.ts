@@ -3,7 +3,7 @@ import moment from "moment";
 import { setupAWS, uploadAWS } from "./lib/aws";
 import { filterByDate } from "./lib/filter";
 import { extractAndClean, extractAndCleanBwb } from "./lib/extract-and-clean";
-import { csv } from "./lib/csv";
+import { csvParser } from "./lib/csv";
 import {
   csv2buffer,
   csv2json,
@@ -43,7 +43,7 @@ async function main() {
       }
       try {
         const extractedData = extractAndClean(data);
-        cleanedData = await csv<RawCSVRow>(extractedData.csvString, ";");
+        cleanedData = await csvParser<RawCSVRow>(extractedData.csvString, ";");
       } catch (error) {
         console.error(error);
         throw error;
@@ -131,7 +131,7 @@ async function main() {
   }
   const extractedAndCleandBWBData = extractAndCleanBwb(data);
 
-  const cleanedData = await csv<{ date: string; value: string }>(
+  const cleanedData = await csvParser<{ date: string; value: string }>(
     extractedAndCleandBWBData.csvString,
     "\t"
   );

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node -r dotenv/config -r ts-node/register index.ts",
     "test": "jest",
+    "test:ci": "jest --coverage",
     "lint": "eslint index.js lib/*.js"
   },
   "repository": {
@@ -24,7 +25,8 @@
     "csvtojson": "2.0.10",
     "got": "11.8.2",
     "moment": "2.29.1",
-    "moment-timezone": "0.5.33"
+    "moment-timezone": "0.5.33",
+    "neat-csv": "^6.0.1"
   },
   "devDependencies": {
     "@types/jest": "26.0.15",
