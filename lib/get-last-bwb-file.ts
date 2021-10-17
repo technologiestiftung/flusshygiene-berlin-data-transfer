@@ -18,14 +18,14 @@ export async function getLatestBWBFile() {
   let lastWorkingUrl = undefined;
   for (let i = 0; i < urls.length; i++) {
     try {
-      console.log(urls[i]);
+      // console.log(urls[i]);
       const data = await got(urls[i]);
       if (data.statusCode === 200) {
         lastWorkingUrl = urls[i];
         break;
       }
     } catch (err: unknown) {
-      console.log(err);
+      console.error(err);
 
       if (err instanceof RequestError && err.response?.statusCode === 404) {
         continue;
