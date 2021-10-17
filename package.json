@@ -21,14 +21,14 @@
   "dependencies": {
     "aws-sdk": "2.970.0",
     "csv-parse": "4.16.0",
-    "csvtojson": "^2.0.10",
+    "csvtojson": "2.0.10",
     "got": "11.8.2",
     "moment": "2.29.1",
     "moment-timezone": "0.5.33"
   },
   "devDependencies": {
     "@types/jest": "26.0.15",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "dotenv": "9.0.2",
     "eslint": "7.13.0",
