@@ -20,5 +20,7 @@ Check config.json and modify the list of stations to transform, if required.
 ## Run
 
 ```
-node index.js
+npm ci
+npm run build
+node build/index.js
 ```
