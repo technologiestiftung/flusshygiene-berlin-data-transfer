@@ -1,6 +1,6 @@
 {
   "name": "flusshygiene-berlin-data-transfer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aggregate, clean and store data required for the modelling of bathing water in Berlin, through the respective flusshygiene plattform",
   "main": "build/index.js",
   "scripts": {
