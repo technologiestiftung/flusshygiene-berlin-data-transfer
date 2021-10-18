@@ -21,6 +21,7 @@
 //   });
 
 import got from "got";
+import { logger } from "./logging";
 
 export async function get(url: string): Promise<string> {
   // get body using got
@@ -28,7 +29,7 @@ export async function get(url: string): Promise<string> {
     const response = await got(url);
     return response.body;
   } catch (error) {
-    console.error(error);
+    logger.error(`Request Error getting data from ${url}`, error);
     throw error;
   }
 }

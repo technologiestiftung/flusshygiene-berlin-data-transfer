@@ -1,5 +1,5 @@
-import { getLatestBWBFile } from "./lib/get-last-bwb-file";
 import moment from "moment";
+import { getLatestBWBFile } from "./lib/get-last-bwb-file";
 import { setupAWS, uploadAWS } from "./lib/aws";
 import { filterByDate } from "./lib/filter";
 import { extractAndClean, extractAndCleanBwb } from "./lib/extract-and-clean";
@@ -7,7 +7,6 @@ import { csvParser } from "./lib/csv";
 import {
   csv2buffer,
   csv2json,
-  CSVRow,
   json2buffer,
   RawCSVRow,
   transform,
@@ -16,6 +15,7 @@ import {
 import { get } from "./lib/requests";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { logger } from "./lib/logging";
 const config: { stations: string[] } = JSON.parse(
   readFileSync(join(__dirname, "../config.json"), "utf8")
 );
@@ -33,57 +33,59 @@ async function main() {
       const sdatum = moment().subtract(5, "day").format("DD.MM.YYYY");
       let data;
       let cleanedData: RawCSVRow[];
+      const url = `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=${sreihe}&smode=${smode}&sdatum=${sdatum}`;
       try {
-        data = await get(
-          `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=${sreihe}&smode=${smode}&sdatum=${sdatum}`
-        );
+        data = await get(url);
       } catch (error) {
-        console.error(error);
+        logger.error(error);
         throw error;
       }
       try {
         const extractedData = extractAndClean(data);
         cleanedData = await csvParser<RawCSVRow>(extractedData.csvString, ";");
       } catch (error) {
-        console.error(error);
+        logger.error(error);
         throw error;
       }
 
       const transformedData = transform(cleanedData, sreihe);
+      // if (transformedData.length === 0) {
+      //   throw Error("No data found after transform");
+      // }
       const date = moment().subtract(1, "day").format("YYYY-MM-DD");
       const filteredData = filterByDate(transformedData, date, "Datum");
       return { filteredData, station };
     }
   );
   try {
-    const filteredDataSets = await Promise.all(
+    const filteredDataSets = await Promise.allSettled(
       createFilteredDataForStationsTasks
     );
 
-    const csvBuffers = filteredDataSets.map(
-      ({
-        filteredData,
-        station,
-      }: {
-        filteredData: CSVRow[];
-        station: string;
-      }) => {
-        const csvBuff = csv2buffer(filteredData);
-        return { buffer: csvBuff, station };
-      }
-    );
-    const jsonBuffers = filteredDataSets.map(
-      ({
-        filteredData,
-        station,
-      }: {
-        filteredData: CSVRow[];
-        station: string;
-      }) => {
-        const jsonBuff = json2buffer(csv2json(filteredData));
-        return { buffer: jsonBuff, station };
-      }
-    );
+    const csvBuffers = filteredDataSets
+      .map((item) => {
+        if (item.status === "fulfilled") {
+          const { filteredData, station } = item.value;
+          const csvBuffer = json2buffer(filteredData);
+          return { buffer: csvBuffer, station };
+        }
+      })
+      .filter((x) => x !== undefined) as NonNullable<{
+      buffer: Buffer;
+      station: string;
+    }>[];
+    const jsonBuffers = filteredDataSets
+      .map((item) => {
+        if (item.status === "fulfilled") {
+          const { filteredData, station } = item.value;
+          const jsonBuff = json2buffer(csv2json(filteredData));
+          return { buffer: jsonBuff, station };
+        }
+      })
+      .filter((x) => x !== undefined) as NonNullable<{
+      buffer: Buffer;
+      station: string;
+    }>[];
 
     const csvUploadTasks = csvBuffers.map(({ buffer, station }) => {
       const ulDated = uploadAWS(
@@ -109,24 +111,25 @@ async function main() {
     const jsonFlat = jsonUploadTasks.flat();
     const csvResultWaPo = await Promise.allSettled(csvFlat);
     const jsonResultWaPo = await Promise.allSettled(jsonFlat);
-    console.log("Wasserportal csv Upload Report");
-    console.log(csvResultWaPo);
-    console.log("Wasserportal json Upload Report");
-    console.log(jsonResultWaPo);
+    logger.info("Wasserportal csv Upload Report");
+    logger.info(csvResultWaPo);
+    logger.info("Wasserportal json Upload Report");
+    logger.info(jsonResultWaPo);
   } catch (error) {
-    console.error(
+    logger.error(
       error,
       "Error getting data and uploading to s3 from wasserportal"
     );
   }
 
+  // BWB Collect data section
   let data: string;
 
   try {
     const url = await getLatestBWBFile();
     data = await get(url);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     throw err;
   }
   const extractedAndCleandBWBData = extractAndCleanBwb(data);
@@ -137,12 +140,12 @@ async function main() {
   );
   const transformedData = transformBwb(cleanedData);
 
-  const days = 1;
+  const days = 2;
   const date = moment().subtract(days, "day").format("YYYY-MM-DD");
   const filteredData = filterByDate(transformedData, date, "date");
 
   if (filteredData.length === 0) {
-    console.error(`No bwb data found for the last ${days} days`);
+    logger.error(`No bwb data found for the last ${days} days`);
     return;
   }
   const csvBuff = csv2buffer(filteredData);
@@ -170,16 +173,16 @@ async function main() {
   try {
     const jsonResultBwb = await Promise.allSettled(jsonBWBUploadTasks());
     const csvResultBwb = await Promise.allSettled(csvBWBUploadTasks());
-    console.log("BWB csv Upload Report");
-    console.log(csvResultBwb);
-    console.log("BWB json Upload Report");
-    console.log(jsonResultBwb);
+    logger.info("BWB csv Upload Report");
+    logger.info(csvResultBwb);
+    logger.info("BWB json Upload Report");
+    logger.info(jsonResultBwb);
   } catch (error) {
-    console.error(error, "Error getting data and uploading to s3 from bwb");
+    logger.error(error, "Error getting data and uploading to s3 from bwb");
   }
 }
 
 main().catch((err) => {
-  console.error(err);
+  logger.error(err);
   process.exit(1);
 });

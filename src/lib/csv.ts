@@ -1,5 +1,6 @@
 // import csv from "csvtojson";
 import neatCsv from "neat-csv";
+import { logger } from "./logging";
 export async function csvParser<CSVData>(
   csvString: string | Buffer,
   separator: string
@@ -10,7 +11,7 @@ export async function csvParser<CSVData>(
     });
     return json;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 }

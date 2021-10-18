@@ -1,4 +1,6 @@
 import moment from "moment-timezone";
+import { WapoValueType } from "./common";
+import { logger } from "./logging";
 
 export interface CSVRow extends Record<string, unknown> {
   date?: string;
@@ -12,41 +14,55 @@ export interface RawCSVRow {
   date?: string;
   Datum?: string;
 }
-export function transform(csvObj: RawCSVRow[], sreihe = "m"): CSVRow[] {
+
+function createCSVRow({
+  value,
+  date,
+}: {
+  value: number;
+  date: string;
+}): CSVRow {
+  return {
+    Einzelwert: value,
+    Datum: date,
+  };
+}
+export function transform(
+  csvObj: RawCSVRow[],
+  sreihe: "m" | "w" = "m"
+): CSVRow[] {
   const parsed: CSVRow[] = [];
+  const key: WapoValueType = sreihe === "m" ? "Tagesmittelwert" : "Einzelwert";
   csvObj.forEach((row: RawCSVRow) => {
-    let item: CSVRow = {
-      Datum: undefined,
-      Einzelwert: undefined,
-      Tagesmittelwert: undefined,
-    };
+    let item: CSVRow;
     /*
      * according to the original R-Script this was supplied as a unix timestamp
      * row.Datum = moment(row.Datum, 'DD.MM.YYYY hh:mm').tz('Europe/Berlin', true).unix()
      * now changed according to issue #6, https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer/issues/6
      */
-    const key = sreihe === "m" ? "Einzelwert" : "Tagesmittelwert";
     const dt = moment(row.Datum, "DD.MM.YYYY hh:mm")
       .tz("Europe/Berlin", true)
       .format("YYYY-MM-DD hh:mm:ss");
     row.Datum = dt;
-    item = { Datum: dt };
     if (row[key] !== undefined) {
-      item.Einzelwert = parseFloat(row[key]!.replace(",", "."));
-
-      // if (key !== "Einzelwert") delete row[key];
+      item = createCSVRow({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        value: parseFloat(row[key]!.replace(",", ".")),
+        date: dt,
+      });
+      parsed.push(item);
     }
-    parsed.push(item);
   });
   const result = parsed
-    .filter((row) => row.Einzelwert !== undefined)
-    .filter((row) => row.Einzelwert !== -777)
-    .filter((row) => !isNaN(row.Einzelwert as number));
+    .filter((row) => row["Einzelwert"] !== undefined)
+    .filter((row) => row["Einzelwert"] !== -777)
+    .filter((row) => !isNaN(row["Einzelwert"] as number));
 
   // in the original R-Script null values/-777 were transformed to NA, now we remove empty values
   // csvObj = csvObj.filter(
   //   (row) => row.Einzelwert && row.Einzelwert !== -777 && !isNaN(row.Einzelwert)
   // );
+  logger.info(result);
   return result;
 }
 
@@ -68,6 +84,9 @@ export function transformBwb(
 }
 
 export function csv2buffer(csvObj: CSVRow[]) {
+  if (csvObj.length === 0) {
+    throw new Error("No csv data found");
+  }
   const columns = Object.keys(csvObj[0]);
   let csvString = columns.join(",");
   csvObj.forEach((row) => {
@@ -80,7 +99,7 @@ export function csv2buffer(csvObj: CSVRow[]) {
   return Buffer.from(csvString, "utf8");
 }
 
-export function json2buffer(jsonObj: Record<string, unknown>) {
+export function json2buffer(jsonObj: Record<string, any>) {
   return Buffer.from(JSON.stringify(jsonObj), "utf8");
 }
 
