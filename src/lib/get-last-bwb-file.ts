@@ -2,6 +2,7 @@
 
 import got, { RequestError } from "got";
 import moment from "moment";
+import { logger } from "./logging";
 
 function buildUrl(datum: string) {
   const url = `http://${process.env.TSB_SECRET}.technologiestiftung-berlin.de/Altarm_RUH_${datum}_0040.txt`;
@@ -18,14 +19,14 @@ export async function getLatestBWBFile() {
   let lastWorkingUrl = undefined;
   for (let i = 0; i < urls.length; i++) {
     try {
-      // console.log(urls[i]);
+      // logger.info(urls[i]);
       const data = await got(urls[i]);
       if (data.statusCode === 200) {
         lastWorkingUrl = urls[i];
         break;
       }
     } catch (err: unknown) {
-      console.error(err);
+      logger.error(err);
 
       if (err instanceof RequestError && err.response?.statusCode === 404) {
         continue;

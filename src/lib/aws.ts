@@ -1,4 +1,5 @@
 import AWS, { S3 } from "aws-sdk";
+import { logger } from "./logging";
 
 export function setupAWS() {
   if (process.env.NODE_ENV !== "test") {
@@ -36,7 +37,7 @@ export async function uploadAWS(
     const data = await s3.upload(params).promise();
     return data;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 }
