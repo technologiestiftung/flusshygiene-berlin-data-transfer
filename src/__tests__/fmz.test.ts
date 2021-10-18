@@ -63,21 +63,6 @@ describe("ff6347 tests", () => {
     ]);
   });
 
-  test("transform csv values", () => {
-    const res = transform(
-      [
-        { Datum: "08.07.2019 00:00", Einzelwert: "7,40" },
-        { Datum: "08.07.2019 00:15", Einzelwert: "7,80" },
-        { Datum: "08.07.2019 00:15", Einzelwert: "-777" },
-      ],
-      "m"
-    );
-    expect(res).toStrictEqual([
-      { Datum: "2019-07-08 12:00:00", Einzelwert: 7.4 },
-      { Datum: "2019-07-08 12:15:00", Einzelwert: 7.8 },
-    ]);
-  });
-
   test("transform csv to json", () => {
     expect(
       csv2json([
@@ -166,20 +151,6 @@ describe("ff6347 tests", () => {
       { date: "25.08.2020", value: "935,012621" },
       { date: "26.08.2020", value: "83507,58802" },
       { date: "27.08.2020", value: "9320,413933" },
-    ]);
-  });
-
-  test("BWB: transform csv values", () => {
-    expect(
-      transformBwb([
-        { date: "25.08.2020", value: "935,012621" },
-        { date: "26.08.2020", value: "83507,58802" },
-        { date: "27.08.2020", value: "9320,413933" },
-      ])
-    ).toStrictEqual([
-      { date: "2020-08-25 12:00:00", value: 935.012621 },
-      { date: "2020-08-26 12:00:00", value: 83507.58802 },
-      { date: "2020-08-27 12:00:00", value: 9320.413933 },
     ]);
   });
 
