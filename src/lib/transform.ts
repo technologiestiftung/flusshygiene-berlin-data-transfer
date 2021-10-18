@@ -27,12 +27,39 @@ function createCSVRow({
     Datum: date,
   };
 }
-export function transform(
-  csvObj: RawCSVRow[],
-  sreihe: "m" | "w" = "m"
-): CSVRow[] {
+export function transform(csvObj: RawCSVRow[], sreihe?: "m" | "w"): CSVRow[] {
   const parsed: CSVRow[] = [];
-  const key: WapoValueType = sreihe === "m" ? "Tagesmittelwert" : "Einzelwert";
+  let key: WapoValueType;
+
+  // autodetect if object has property Tagesmittelwert or Einzelwert
+  // and garding against malformed values
+  if (sreihe === undefined) {
+    if (
+      csvObj[0]["Einzelwert"] === undefined &&
+      csvObj[0]["Tagesmittelwert"] === undefined
+    ) {
+      throw new Error(
+        "Could not detect Tagesmittelwert nor Einzelwert property."
+      );
+    }
+    if (csvObj[0]["Einzelwert"] === undefined) {
+      key = "Tagesmittelwert";
+    } else if (csvObj[0]["Tagesmittelwert"] === undefined) {
+      key = "Einzelwert";
+    }
+  } else {
+    key = sreihe === "m" ? "Tagesmittelwert" : "Einzelwert";
+    if (
+      key === "Tagesmittelwert" &&
+      csvObj[0]["Tagesmittelwert"] === undefined
+    ) {
+      throw new Error("Could not detect Tagesmittelwert property.");
+    }
+    if (key === "Einzelwert" && csvObj[0]["Einzelwert"] === undefined) {
+      throw new Error("Could not detect Einzelwert property.");
+    }
+  }
+
   csvObj.forEach((row: RawCSVRow) => {
     let item: CSVRow;
     /*
