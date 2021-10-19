@@ -30,4 +30,4 @@ jobs:
       - name: typechecking
         run: npm run build
       - name: exec data transfer
-        run: node build/index.js --unhandled-rejections=strict
+        run: node -r ts-node/register src/index.ts --unhandled-rejections=strict
