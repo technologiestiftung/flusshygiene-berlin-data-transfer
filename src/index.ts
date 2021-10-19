@@ -61,6 +61,15 @@ async function main() {
     const filteredDataSets = await Promise.allSettled(
       createFilteredDataForStationsTasks
     );
+    let keepOn = false;
+    for (const set of filteredDataSets) {
+      if (set.status === "fulfilled" && set.value.filteredData.length > 0) {
+        keepOn = true;
+      }
+    }
+    if (!keepOn) {
+      throw Error("No data found we can upload after filtering by date");
+    }
 
     const csvBuffers = filteredDataSets
       .map((item) => {
@@ -115,11 +124,13 @@ async function main() {
     logger.info(csvResultWaPo);
     logger.info("Wasserportal json Upload Report");
     logger.info(jsonResultWaPo);
-  } catch (error) {
-    logger.error(
-      error,
-      "Error getting data and uploading to s3 from wasserportal"
-    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      logger.error(
+        error.message,
+        "Error getting data and uploading to s3 from wasserportal"
+      );
+    }
   }
 
   // BWB Collect data section

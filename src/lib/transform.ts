@@ -89,7 +89,7 @@ export function transform(csvObj: RawCSVRow[], sreihe?: "m" | "w"): CSVRow[] {
   // csvObj = csvObj.filter(
   //   (row) => row.Einzelwert && row.Einzelwert !== -777 && !isNaN(row.Einzelwert)
   // );
-  logger.info(result);
+  logger.info(`Filtered datasets from wasserportal: ${JSON.stringify(result)}`);
   return result;
 }
 
