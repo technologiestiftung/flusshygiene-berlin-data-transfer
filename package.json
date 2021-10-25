@@ -22,8 +22,12 @@
   },
   "homepage": "https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer#readme",
   "dependencies": {
+<<<<<<< HEAD
     "aws-sdk": "2.970.0",
     "date-fns": "2.25.0",
+=======
+    "aws-sdk": "2.1010.0",
+>>>>>>> 81697432f52d624d3e91ae597f1bfffda43f0b72
     "got": "11.8.2",
     "moment": "2.29.1",
     "moment-timezone": "0.5.33",

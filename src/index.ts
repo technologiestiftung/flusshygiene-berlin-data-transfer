@@ -1,7 +1,7 @@
-import moment from "moment";
+import { format, sub } from "date-fns";
 import { getLatestBWBFile } from "./lib/get-last-bwb-file";
 import { setupAWS, uploadAWS } from "./lib/aws";
-import { filterByDate } from "./lib/filter";
+import { filterByDateInterval } from "./lib/filter";
 import { extractAndClean, extractAndCleanBwb } from "./lib/extract-and-clean";
 import { csvParser } from "./lib/csv";
 import {
@@ -24,13 +24,21 @@ if (!("TSB_SECRET" in process.env)) {
   throw Error("TSB_SECRET is required as environmental variable");
 }
 
+const now = new Date();
+const uploadTimestamp = format(now, "yyyy-mm-dd_HH-mm-ss");
+const interval = {
+  start: sub(now, { days: 3 }).toISOString(),
+  end: now.toISOString(),
+};
 async function main() {
   // create filtered data tasks
   const createFilteredDataForStationsTasks = config.stations.map(
     async (station) => {
       const sreihe: "m" | "w" = "m";
       const smode = "c";
-      const sdatum = moment().subtract(5, "day").format("DD.MM.YYYY");
+      // we want data for the last five days
+
+      const sdatum = format(sub(now, { days: 5 }), "dd.mm.yyyy"); // moment().subtract(5, "day").format("DD.MM.YYYY");
       let data;
       let cleanedData: RawCSVRow[];
       const url = `https://wasserportal.berlin.de/station.php?anzeige=dd&sstation=${station}&sreihe=${sreihe}&smode=${smode}&sdatum=${sdatum}`;
@@ -49,11 +57,18 @@ async function main() {
       }
 
       const transformedData = transform(cleanedData, sreihe);
-      // if (transformedData.length === 0) {
-      //   throw Error("No data found after transform");
-      // }
-      const date = moment().subtract(1, "day").format("YYYY-MM-DD");
-      const filteredData = filterByDate(transformedData, date, "Datum");
+
+      // const interval = {
+      //   start: sub(now, { days: 3 }).toISOString(),
+      //   end: now.toISOString(),
+      // };
+      // const date = moment().subtract(2, "day").format("YYYY-MM-DD");
+      const filteredData = filterByDateInterval({
+        data: transformedData,
+        interval,
+        key: "Datum",
+      });
+      // const filteredData = filterByDateString(transformedData, date, "Datum");
       return { filteredData, station };
     }
   );
@@ -96,11 +111,12 @@ async function main() {
       station: string;
     }>[];
 
+    // const uploadTimestamp = format(now,"yyyy-mm-dd_HH-mm-ss");
     const csvUploadTasks = csvBuffers.map(({ buffer, station }) => {
       const ulDated = uploadAWS(
         s3,
         buffer,
-        `stations/${station}/${moment().format("YYYY-MM-DD_hh-mm-ss")}.csv`
+        `stations/${station}/${uploadTimestamp}.csv`
       );
       const ulLatest = uploadAWS(s3, buffer, `stations/${station}/latest.csv`);
       return [ulDated, ulLatest];
@@ -110,7 +126,7 @@ async function main() {
       const ulDated = uploadAWS(
         s3,
         buffer,
-        `stations/${station}/${moment().format("YYYY-MM-DD_hh-mm-ss")}.json`
+        `stations/${station}/${uploadTimestamp}.json`
       );
       const ulLatest = uploadAWS(s3, buffer, `stations/${station}/latest.json`);
       return [ulDated, ulLatest];
@@ -151,23 +167,27 @@ async function main() {
   );
   const transformedData = transformBwb(cleanedData);
 
-  const days = 2;
-  const date = moment().subtract(days, "day").format("YYYY-MM-DD");
-  const filteredData = filterByDate(transformedData, date, "date");
+  // const days = 2;
+  // const date = moment().subtract(days, "day").format("YYYY-MM-DD");
+
+  const filteredData = filterByDateInterval({
+    data: transformedData,
+    interval: interval,
+    key: "date",
+  });
 
   if (filteredData.length === 0) {
-    logger.error(`No bwb data found for the last ${days} days`);
+    logger.error(
+      `No bwb data found for the interval ${JSON.stringify(interval)} days`
+    );
     return;
   }
   const csvBuff = csv2buffer(filteredData);
   const jsonBuff = json2buffer(csv2json(filteredData));
 
+  // const bwbUploadTimestamp = moment().format("YYYY-MM-DD_hh-mm-ss");
   const csvBWBUploadTasks = () => {
-    const ulDated = uploadAWS(
-      s3,
-      csvBuff,
-      `wastewater/${moment().format("YYYY-MM-DD_hh-mm-ss")}.csv`
-    );
+    const ulDated = uploadAWS(s3, csvBuff, `wastewater/${uploadTimestamp}.csv`);
     const ulLatest = uploadAWS(s3, csvBuff, `wastewater/latest.csv`);
     return [ulDated, ulLatest];
   };
@@ -175,7 +195,7 @@ async function main() {
     const ulDated = uploadAWS(
       s3,
       jsonBuff,
-      `wastewater/${moment().format("YYYY-MM-DD_hh-mm-ss")}.json`
+      `wastewater/${uploadTimestamp}.json`
     );
     const ulLatest = uploadAWS(s3, jsonBuff, `wastewater/latest.json`);
 
