@@ -1,6 +1,7 @@
-![](https://img.shields.io/badge/Build%20with%20%E2%9D%A4%EF%B8%8F-at%20Technologiesitftung%20Berlin-blue)
+![](https://img.shields.io/badge/Built%20with%20%E2%9D%A4%EF%B8%8F-at%20Technologiestiftung%20Berlin-blue)
 
 # flusshygiene-berlin-data-transfer
+
 [![Build Status](https://travis-ci.org/technologiestiftung/flusshygiene-berlin-data-transfer.svg?branch=master)](https://travis-ci.org/technologiestiftung/flusshygiene-berlin-data-transfer)
 Aggregate, clean and store data required for the modelling of bathing water in Berlin, through the respective flusshygiene plattform
 
@@ -52,6 +53,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 ## Credits
 
 ### Partners network
+
 <table>
   <tr>
     <td>
@@ -78,6 +80,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 </table>
 
 ### Developed in the project
+
 <table>
   <tr>
     <td>
@@ -88,6 +91,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 </table>
 
 ### Supported by
+
 <table>
   <tr>
     <td>
