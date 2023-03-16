@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Dispatcher
         run: echo "${{ github.event.client_payload.source }}"
       - name: Use Node.js from nvm
