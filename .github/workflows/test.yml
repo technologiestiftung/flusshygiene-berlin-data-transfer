@@ -11,6 +11,9 @@ on:
 
 jobs:
   build:
+    env:
+      CI: true
+      NODE_OPTIONS: "--no-experimental-fetch"
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip ci')"
     strategy:
