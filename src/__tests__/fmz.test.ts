@@ -2,13 +2,7 @@ import { setupAWS, uploadAWS } from "../lib/aws";
 import { csvParser } from "../lib/csv";
 import { extractAndClean, extractAndCleanBwb } from "../lib/extract-and-clean";
 import { get } from "../lib/requests";
-import {
-  transform,
-  csv2json,
-  csv2buffer,
-  json2buffer,
-  transformBwb,
-} from "../lib/transform";
+import { csv2json, csv2buffer, json2buffer } from "../lib/transform";
 
 jest.mock("aws-sdk", () => {
   return {

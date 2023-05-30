@@ -5,7 +5,7 @@
 import { setupAWS } from "../lib/aws";
 import { csvParser } from "../lib/csv";
 import { extractAndClean, extractAndCleanBwb } from "../lib/extract-and-clean";
-import { filterByDate } from "../lib/filter";
+import { filterByDateString } from "../lib/filter";
 import { get } from "../lib/requests";
 import { transform, csv2json, transformBwb } from "../lib/transform";
 
@@ -89,7 +89,9 @@ describe("Tests by @sebastian-meier", () => {
       { date: "2019-07-08 12:00:00" },
       { date: "2019-07-08 15:00:00" },
     ];
-    expect(filterByDate(data, "2019-07-08", "date")).toStrictEqual(result);
+    expect(filterByDateString(data, "2019-07-08", "date")).toStrictEqual(
+      result
+    );
   });
 
   test("setup aws client", () => {

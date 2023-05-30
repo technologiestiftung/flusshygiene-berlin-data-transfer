@@ -23,6 +23,7 @@
   "homepage": "https://github.com/technologiestiftung/flusshygiene-berlin-data-transfer#readme",
   "dependencies": {
     "aws-sdk": "2.1010.0",
+    "date-fns": "2.25.0",
     "got": "11.8.2",
     "moment": "2.29.1",
     "moment-timezone": "0.5.33",
@@ -39,7 +40,7 @@
     "eslint-plugin-jest": "25.2.2",
     "eslint-plugin-prettier": "3.1.4",
     "jest": "27.3.0",
-    "msw": "0.21.3",
+    "msw": "0.35.0",
     "prettier": "2.1.2",
     "ts-jest": "27.0.7",
     "ts-node": "10.3.0",

@@ -1,19 +1,20 @@
 //@ts-check
 
+import { format, sub } from "date-fns";
 import got, { RequestError } from "got";
-import moment from "moment";
 import { logger } from "./logging";
 
 function buildUrl(datum: string) {
   const url = `http://${process.env.TSB_SECRET}.technologiestiftung-berlin.de/Altarm_RUH_${datum}_0040.txt`;
   return url;
 }
-
+const now = new Date();
 export async function getLatestBWBFile() {
   const dates = [];
   // create an array with the dates of the last 30 days
   for (let i = 0; i < 30; i++) {
-    dates.push(moment().subtract(i, "days").format("YYMMDD"));
+    const date = format(sub(now, { days: i }), "yyMMdd");
+    dates.push(date);
   }
   const urls = dates.map(buildUrl);
   let lastWorkingUrl = undefined;
