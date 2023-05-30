@@ -19,12 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Dispatcher
         run: echo "${{ github.event.client_payload.source }}"
-      - name: Use Node.js from nvm
-        shell: bash -l {0}
-        run: nvm install
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
       - name: install dependencies
         run: npm ci
       - name: typechecking
