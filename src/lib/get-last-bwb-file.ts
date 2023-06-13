@@ -5,7 +5,7 @@ import moment from "moment";
 import { logger } from "./logging";
 
 function buildUrl(datum: string) {
-	const url = `http://${process.env.TSB_SECRET}.technologiestiftung-berlin.de/KW_RUH_Gesamtzulauf_${datum}_0040.txt`;
+	const url = `http://${process.env.TSB_SECRET}.technologiestiftung-berlin.de/Altarm_RUH_${datum}_0040.txt`;
 	return url;
 }
 
