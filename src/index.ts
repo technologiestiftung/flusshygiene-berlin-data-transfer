@@ -7,6 +7,7 @@ import { csvParser } from "./lib/csv";
 import {
 	csv2buffer,
 	csv2json,
+	CSVRow,
 	json2buffer,
 	RawCSVRow,
 	transform,
@@ -33,6 +34,7 @@ async function main() {
 			let data;
 			let cleanedData: RawCSVRow[];
 			const url = wasserportalUrlBuilder({ sreihe });
+			logger.info(`url: ${url}`);
 			try {
 				data = await get(url);
 			} catch (error) {
@@ -51,8 +53,22 @@ async function main() {
 			// if (transformedData.length === 0) {
 			//   throw Error("No data found after transform");
 			// }
-			const date = moment().subtract(1, "day").format("YYYY-MM-DD");
-			const filteredData = filterByDate(transformedData, date, "Datum");
+			let lookBackDays = 1;
+			const maxLookBackDays = 5;
+			let filteredData: CSVRow[] = [];
+			while (lookBackDays <= maxLookBackDays) {
+				const date = moment()
+					.subtract(lookBackDays, "day")
+					.format("YYYY-MM-DD");
+				filteredData = filterByDate(transformedData, date, "Datum");
+				if (filteredData.length === 0) {
+					logger.info(
+						"no data found looking back one more day. LookBack:" + lookBackDays,
+					);
+					lookBackDays++;
+				}
+			}
+			logger.info(`filteredData: ${JSON.stringify(filteredData)}`);
 			return { filteredData, station };
 		},
 	);
