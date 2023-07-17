@@ -62,13 +62,20 @@ async function main() {
 					.format("YYYY-MM-DD");
 				filteredData = filterByDate(transformedData, date, "Datum");
 				if (filteredData.length === 0) {
-					logger.info(
-						"no data found looking back one more day. LookBack:" + lookBackDays,
-					);
 					lookBackDays++;
+					logger.info(
+						`no data found looking back one more day. LookBack: ${lookBackDays}`,
+					);
+				} else {
+					logger.info(
+						`found data by looking back ${lookBackDays} days. filteredData: ${JSON.stringify(
+							filteredData,
+						)}`,
+					);
+					break;
 				}
 			}
-			logger.info(`filteredData: ${JSON.stringify(filteredData)}`);
+
 			return { filteredData, station };
 		},
 	);
