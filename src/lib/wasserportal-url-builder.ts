@@ -9,6 +9,7 @@ export interface WasserportalUrlBuilderOptions {
 	sdatum?: string;
 	station?: string;
 	anzeige?: "d" | "g";
+	thema?: "odf";
 }
 
 export function wasserportalUrlBuilder(
@@ -23,11 +24,12 @@ export function wasserportalUrlBuilder(
 		sdatum: moment().subtract(5, "day").format("DD.MM.YYYY"),
 		station: "5803200",
 		anzeige: "d",
+		thema: "odf",
 	};
-	const { sreihe, smode, sdatum, station, anzeige } = {
+	const { sreihe, smode, sdatum, station, anzeige, thema } = {
 		...defaultOptions,
 		...options,
 	};
 
-	return `https://wasserportal.berlin.de/station.php?anzeige=${anzeige}&station=${station}&sreihe=${sreihe}&smode=${smode}&sdatum=${sdatum}`;
+	return `https://wasserportal.berlin.de/station.php?anzeige=${anzeige}&station=${station}&sreihe=${sreihe}&smode=${smode}&thema=${thema}&sdatum=${sdatum}`;
 }
